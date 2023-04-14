@@ -1,0 +1,34 @@
+---
+# The URL for your GhostWriter instance (e.g., "https://ghostwriter.example.com")
+gw_url: ""
+
+# The ID number of the GhostWriter Oplog where entries will be recorded. This can be found in the Oplog URL
+# Example: "{gw_url}/oplog/{gw_oplog_id}/entries"
+gw_oplog_id: 0
+
+# Name/identifier of the user creating the log entries
+operator: neo
+
+# One of the following GhostWriter API keys MUST be specified; if both are specified, terminal_sync 
+# will default to using the GraphQL API
+
+# A GhostWriter GraphQL API key. To generate:
+#   1. Login to GhostWriter
+#   2. Click on your user profile icon in the upper-right corner
+#   3. Scroll down to the **API Tokens** section and click **Create**
+#   4. Provide a name and expiration date, then click **Submit**
+gw_api_key_graphql: 
+
+# A GhostWriter REST API key. This key is generated when, and only when, a new Oplog is created
+gw_api_key_rest: 
+
+# Anything appearing after this token in a shell command will be logged to the entry's Description field
+# Note: Including this token will force any command where it is provided to be logged
+gw_description_token: "#desc"
+
+# List of keywords that will trigger logging a command to GhostWriter
+# The `gw_description_token` is automatically added to this list
+termsync_keywords:
+  - aws
+  - kubectl
+  - proxychains
