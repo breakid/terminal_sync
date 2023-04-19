@@ -88,10 +88,11 @@ ipython_config.py
 # pdm
 #   Similar to Pipfile.lock, it is generally recommended to include pdm.lock in version control.
 #pdm.lock
-#   pdm stores project-wide configurations in .pdm.toml, but it is recommended to not include it
+#   pdm stores project-wide configurations in .pdm.toml or .pdm-python, but it is recommended to not include it
 #   in version control.
 #   https://pdm.fming.dev/#use-with-ide
 .pdm.toml
+.pdm-python
 
 # pipenv
 #   According to pypa/pipenv#598, it is recommended to include Pipfile.lock in version control.

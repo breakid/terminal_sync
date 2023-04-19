@@ -1,0 +1,151 @@
+# USAGE NOTES
+#
+# To setup, run:
+#
+#   pre-commit install
+#
+# and then you can do your normal git add + git commit or run:
+#
+#   pre-commit run --all-files
+#
+# If you edit this file, you need to re-run `pre-commit install`
+#
+# Source: https://github.com/pre-commit/pre-commit-hooks
+# Source: https://github.com/apwheele/retenmod/blob/main/.pre-commit-config.yaml
+
+exclude: ".git|.tox|docs"
+#fail_fast: true
+default_language_version:
+  python: python3
+
+ci:
+  autofix_commit_msg: |
+    fix: Auto fix by pre-commit [pre-commit.ci]
+
+    For more information, see https://pre-commit.ci
+  autoupdate_commit_msg: "fix: Pre-commit autoupdate [pre-commit.ci]"
+
+repos:
+  - repo: https://github.com/pdm-project/pdm
+    rev: 2.5.3
+    hooks:
+      # Ensure pdm.lock is up-to-date
+      - id: pdm-lock-check
+
+      # Export production dependencies to requirements.txt
+      - id: pdm-export
+        args: ["--prod", "-o", "requirements.txt", "--without-hashes"]
+        files: ^pdm.lock$
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      # Prevent giant files from being committed
+      - id: check-added-large-files
+
+      # Check whether files parse as valid python
+      - id: check-ast
+
+      # Check for files with names that would conflict on a case-insensitive filesystem
+      - id: check-case-conflict
+
+      # Checks for a common error of placing code before the docstring
+      - id: check-docstring-first
+
+      # Checks that non-binary executables have a proper shebang.
+      - id: check-executables-have-shebangs
+
+      # Attempts to load all json files to verify syntax
+      - id: check-json
+
+      # Check for files that contain merge conflict strings
+      - id: check-merge-conflict
+
+      # Checks for symlinks which do not point to anything
+      - id: check-symlinks
+
+      # Attempts to load all TOML files to verify syntax
+      - id: check-toml
+
+      # Ensures that links to version control system (VCS) websites are permalinks
+      - id: check-vcs-permalinks
+
+      # Attempts to load all xml files to verify syntax
+      - id: check-xml
+
+      # Attempts to load all yaml files to verify syntax
+      - id: check-yaml
+
+      # Check for debugger imports and py37+ breakpoint() calls in python source
+      - id: debug-statements
+
+      # Detects symlinks which are changed to regular files with a content of a path which that symlink was pointing to
+      - id: destroyed-symlinks
+
+      # Makes sure files end in a newline and only a newline
+      - id: end-of-file-fixer
+
+      # Verifies that test files are named correctly
+      - id: name-tests-test
+        args: [--pytest-test-first]
+
+      # Ensure JSON is pretty printed
+      - id: pretty-format-json
+        args: [--autofix, --no-ensure-ascii]
+
+      # Trims trailing whitespace
+      - id: trailing-whitespace
+
+  # Automatically upgrade syntax for newer versions of the language
+  - repo: https://github.com/asottile/pyupgrade
+    rev: v3.3.1
+    hooks:
+      - id: pyupgrade
+        args: [--py38-plus]
+
+  # Enforce that python3.6+ type annotations are used instead of type comments
+  - repo: https://github.com/pre-commit/pygrep-hooks
+    rev: v1.10.0
+    hooks:
+      - id: python-use-type-annotations
+
+  # Apply mypy static type checking
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.2.0
+    hooks:
+      - id: mypy
+        additional_dependencies: [types-PyYAML]
+
+  # Sort imports and add section headers
+  - repo: https://github.com/pycqa/isort
+    rev: 5.12.0
+    hooks:
+      - id: isort
+        name: isort (python)
+        # See pyproject.toml for config options
+
+  # Format code using Black
+  - repo: https://github.com/psf/black
+    rev: 23.3.0
+    hooks:
+      - id: black
+        # See pyproject.toml for config options
+
+  # flake8 is a python tool that glues together pycodestyle, pyflakes, mccabe, and third-party plugins to check the
+  # style and quality of some python code
+  - repo: https://github.com/PyCQA/flake8
+    rev: 6.0.0
+    hooks:
+      - id: flake8
+        args: [-v]
+        # Use a plugin to read the config from pyproject.toml
+        # Alternatively, could use `pyproject-flake8`
+        # See https://github.com/csachs/pyproject-flake8/issues/3#issuecomment-863976991
+        additional_dependencies: [Flake8-pyproject]
+
+  # Check for missing docstrings
+  - repo: https://github.com/econchick/interrogate
+    rev: 1.5.0
+    hooks:
+      - id: interrogate
+        # See pyproject.toml for config options

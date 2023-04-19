@@ -9,22 +9,60 @@ description = "A standalone tool for logging shell commands to GhostWriter autom
 authors = [{ name = "breakid" }]
 license = { text = "GPL-3.0-or-later" }
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.8"
 dependencies = [
   "aiohttp>=3.8.4",
-  "gql>=3.4.0",
-  "pyyaml>=6.0",
   "fastapi>=0.95.0",
-  "uvicorn>=0.21.1",
+  "gql>=3.4.0",
   "python-dotenv>=1.0.0",
+  "pyyaml>=6.0",
+  "uvicorn>=0.21.1",
 ]
+keywords = ["GhostWriter"]
+
+[project.urls]
+homepage = "https://github.com/breakid/terminal_sync"
+documentation = "https://breakid.github.io/terminal_sync"
+repository = "https://github.com/breakid/terminal_sync"
+
+[tool.black]
+line-length = 120
+
+[tool.flake8]
+# Compatibility settings for Black (see https://black.readthedocs.io/en/latest/guides/using_black_with_other_tools.html#flake8)
+extend-ignore = ["E203"]
+max-line-length = 120
+
+[tool.interrogate]
+exclude = ["docs", "build"]
+fail-under = 90
+ignore-init-method = true
+ignore-init-module = true
+verbose = 2
+
+[tool.isort]
+atomic = true
+force_single_line = true
+import_headings = { stdlib = "Standard Libraries", thirdparty = "Third-party Libraries", firstparty = "Internal Libraries" }
+known_first_party = ["terminal_sync"]
+line_length = 120
+profile = "black"
+
+[tool.mypy]
+disable_error_code = "attr-defined"
 
 [tool.pdm]
 
 [tool.pdm.dev-dependencies]
-dev = ["pytest>=7.3.0"]
+dev = [
+  "black>=23.3.0",
+  "pytest>=7.3.0",
+  "pre-commit>=3.2.2",
+  "types-PyYAML>=6.0.12.9",
+]
 
 [tool.pdm.scripts]
+check = "pre-commit run --all-files"
 code = "code terminal_sync.code-workspace"
 serve = "uvicorn api:app --reload"
 test = "pytest"

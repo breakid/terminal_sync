@@ -1,28 +1,43 @@
 # Standard Libraries
 from datetime import datetime
+from re import Pattern
+from re import compile
+from typing import Any
+from typing import Generator
 
 # Third-party Libraries
 from pytest import fixture
+from pytest import raises
 
 # Internal Libraries
 from terminal_sync.log_entry import Entry
 
-
-@fixture
-def basic_entry():
-    return Entry(
-        command="  proxychains4 python3 smbclient.py SGC.HWS.MIL/sam.carter:password@SGCDC001.SGC.HWS.MIL  ",
-        start_time="2023-01-01 00:30:00",
-        end_time="2023-01-01 00:29:00",  # One minute less than the start_time
-    )
+# Define common patterns that can be reused in multiple tests
+DATE_PATTERN: Pattern = compile(r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}")
+HOST_PATTERN: Pattern = compile(r".*? \(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\)")
 
 
 @fixture
-def filled_out_entry():
+def basic_entry() -> Entry:
+    """Return a new Entry object using only mandatory arguments
+
+    Returns:
+        Entry: An Entry object with only mandatory fields set
+    """
+    return Entry(command="  proxychains4 python3 smbclient.py SGC.HWS.MIL/sam.carter:password@SGCDC001.SGC.HWS.MIL  ")
+
+
+@fixture
+def filled_out_entry() -> Entry:
+    """Return a new Entry object using all arguments
+
+    Returns:
+        Entry: An Entry object with all fields set
+    """
     return Entry(
         command="  proxychains4 python3 smbclient.py SGC.HWS.MIL/sam.carter:password@SGCDC001.SGC.HWS.MIL  ",
-        start_time="2022-12-01 09:30:00",
-        end_time="2022-12-01 09:29:10",
+        start_time=datetime.fromisoformat("2022-12-01 09:30:00"),
+        end_time=datetime.fromisoformat("2022-12-01 09:29:10"),  # 50 seconds less than the start time
         gw_id=1,
         source_host="localhost (127.0.0.1)",
         operator="neo",
@@ -32,19 +47,28 @@ def filled_out_entry():
         output="Success",
         description="Uploaded files to target",
         comments="PowerShell Session: bd58093b-9b74-4f49-b71f-7f6dcf4be130",
-        tags=None,
+        # tags=None,
     )
 
 
-def test_entry_default_values(basic_entry):
-    entry = basic_entry
+def test_entry_default_values(basic_entry: Entry) -> None:
+    """Verify default values are set
 
-    assert entry.command == "proxychains4 python3 smbclient.py SGC.HWS.MIL/sam.carter:password@SGCDC001.SGC.HWS.MIL"
+    Args:
+        basic_entry (Entry): An Entry object with only mandatory fields set
+    """
+    entry: Entry = basic_entry
 
-    assert entry.start_time == "2023-01-01 00:30:00"
-    assert entry.end_time == "2023-01-01 00:30:00", f"Expected end_time to match start_time; got: {entry.end_time}"
+    assert (
+        entry.command == "proxychains4 python3 smbclient.py SGC.HWS.MIL/sam.carter:password@SGCDC001.SGC.HWS.MIL"
+    ), f"Expected whitespace to be stripped from the command; got '{entry.command}'"
+    assert isinstance(entry.start_time, str)
+    assert isinstance(entry.end_time, str)
+    assert DATE_PATTERN.match(entry.start_time)
+    assert DATE_PATTERN.match(entry.end_time)
     assert entry.gw_id is None
-    assert entry.source_host is not None
+    assert isinstance(entry.source_host, str), f"Expected source_host to be a string; got {type(entry.source_host)}"
+    assert HOST_PATTERN.match(entry.source_host)
     assert entry.operator is None
     assert entry.destination_host is None
     assert entry.tool is None
@@ -52,15 +76,22 @@ def test_entry_default_values(basic_entry):
     assert entry.output == ""
     assert entry.description is None
     assert entry.comments == "Logged by terminal_sync"
-    assert entry.tags is None
+    # assert entry.tags is None
 
 
-def test_entry_creation(filled_out_entry):
-    entry = filled_out_entry
+def test_entry_creation(filled_out_entry: Entry) -> None:
+    """Verify all fields are set properly when creating an entry
 
-    assert entry.command == "proxychains4 python3 smbclient.py SGC.HWS.MIL/sam.carter:password@SGCDC001.SGC.HWS.MIL"
+    Args:
+        filled_out_entry (Entry): An Entry object with all fields set
+    """
+    entry: Entry = filled_out_entry
+
+    assert (
+        entry.command == "proxychains4 python3 smbclient.py SGC.HWS.MIL/sam.carter:password@SGCDC001.SGC.HWS.MIL"
+    ), f"Expected whitespace to be stripped from the command; got '{entry.command}'"
     assert entry.start_time == "2022-12-01 09:30:00"
-    assert entry.end_time == "2022-12-01 09:30:00"
+    assert entry.end_time == "2022-12-01 09:30:00", f"Expected end_time to match start_time; got: {entry.end_time}"
     assert entry.gw_id == 1
     assert entry.source_host == "localhost (127.0.0.1)"
     assert entry.operator == "neo"
@@ -70,24 +101,16 @@ def test_entry_creation(filled_out_entry):
     assert entry.output == "Success"
     assert entry.description == "Uploaded files to target"
     assert entry.comments == "PowerShell Session: bd58093b-9b74-4f49-b71f-7f6dcf4be130"
-    assert entry.tags == None
+    # assert entry.tags is None
 
 
-def test_post_init_strips_command(basic_entry):
-    assert (
-        basic_entry.command == "proxychains4 python3 smbclient.py SGC.HWS.MIL/sam.carter:password@SGCDC001.SGC.HWS.MIL"
-    ), f'Spaces not stripped from: "{entry.command}"'
+def test_entry_fields(filled_out_entry: Entry) -> None:
+    """Verify `.fields()` returns the correct values
 
-
-def test_post_init_resets_end_time(basic_entry):
-    entry = basic_entry
-
-    assert entry.start_time == "2023-01-01 00:30:00"
-    assert entry.end_time == "2023-01-01 00:30:00", f"Expected end_time to match start_time; got: {entry.end_time}"
-
-
-def test_entry_fields(filled_out_entry):
-    fields = filled_out_entry.fields()
+    Args:
+        filled_out_entry (Entry): An Entry object with all fields set
+    """
+    fields: dict[str, int | str] = filled_out_entry.fields()
 
     assert len(fields) == 12
     assert fields["command"] == "proxychains4 python3 smbclient.py SGC.HWS.MIL/sam.carter:password@SGCDC001.SGC.HWS.MIL"
@@ -102,11 +125,16 @@ def test_entry_fields(filled_out_entry):
     assert fields["output"] == "Success"
     assert fields["description"] == "Uploaded files to target"
     assert fields["comments"] == "PowerShell Session: bd58093b-9b74-4f49-b71f-7f6dcf4be130"
-    assert "tags" not in fields
+    # assert "tags" not in fields
 
 
-def test_to_rest(filled_out_entry):
-    fields = filled_out_entry.to_rest()
+def test_to_rest(filled_out_entry: Entry) -> None:
+    """_summary_
+
+    Args:
+        filled_out_entry (Entry): An Entry object with all fields set
+    """
+    fields: dict[str, int | str] = filled_out_entry.to_rest()
 
     assert len(fields) == 12
     assert fields["command"] == "proxychains4 python3 smbclient.py SGC.HWS.MIL/sam.carter:password@SGCDC001.SGC.HWS.MIL"
@@ -123,48 +151,89 @@ def test_to_rest(filled_out_entry):
     assert fields["comments"] == "PowerShell Session: bd58093b-9b74-4f49-b71f-7f6dcf4be130"
 
 
-def test_update(basic_entry):
-    entry = basic_entry
+def test_update(filled_out_entry: Entry) -> None:
+    """Verify that `update()` updates the end_time, output, and comments; does not update start_time;
+    and ignores keys that do not match attributes
 
-    assert entry.start_time == "2023-01-01 00:30:00"
-    assert entry.end_time == "2023-01-01 00:30:00"
-    assert entry.output == ""
-    assert entry.comments == "Logged by terminal_sync"
+    Args:
+        filled_out_entry (Entry): An Entry object with all fields set
+    """
+    entry: Entry = filled_out_entry
 
-    entry.update(
-        start_time="2023-01-02 00:30:00",
-        end_time="2023-01-02 00:29:00",
-        output="Success",
-        comments="PowerShell Session: bd58093b-9b74-4f49-b71f-7f6dcf4be130",
-    )
+    original_start_time: str = "2022-12-01 09:30:00"
+    new_end_time: str = "2023-01-02 00:29:00"
+    new_output: str = "Failed"
+    new_comment: str = "PowerShell Session: 7f007022-1cb6-4e8d-b8b8-252e6e07943d"
 
-    assert entry.start_time == "2023-01-01 00:30:00", "Start time should not be updated"
-    assert entry.end_time == "2023-01-02 00:29:00"
+    # Baseline the previous state
+    assert entry.start_time == original_start_time
+    assert entry.end_time == "2022-12-01 09:30:00"
     assert entry.output == "Success"
     assert entry.comments == "PowerShell Session: bd58093b-9b74-4f49-b71f-7f6dcf4be130"
 
-    entry.update(end_time="2023-01-01 00:00:00")
+    # 'invalid_key' should be ignored gracefully and not raise an exception
+    entry.update(
+        {
+            "start_time": datetime.fromisoformat("2023-01-02 00:30:00"),
+            "end_time": datetime.fromisoformat(new_end_time),
+            "output": new_output,
+            "comments": new_comment,
+            "invalid_key": "",
+        }
+    )
 
-    assert entry.end_time == "2023-01-01 00:30:00", "End time set to before start time should be reset to start time"
+    # Verify start_time was not updated and the remaining fields were
+    assert entry.start_time == original_start_time, f"Start time should not be updated; got: {entry.start_time}"
+    assert entry.end_time == new_end_time, f"End time should be updated; got: {entry.end_time}"
+    assert entry.output == new_output, f"Expected '{new_output}'; got: {entry.output}"
+    assert entry.comments == new_comment
+
+    # Verify if end_time < start_time, the end_time is set to match start_time
+    new_end_time = "2022-11-30 00:00:00"
+    entry.update({"end_time": datetime.fromisoformat(new_end_time)})
+
+    assert new_end_time < original_start_time
+    assert entry.end_time == original_start_time, "End time set to before start time should be reset to start time"
 
 
-# def test_iter(basic_entry):
-#     attrs: dict[str, Optional[str]] = {
-#         "command": "proxychains4 python3 smbclient.py SGC.HWS.MIL/sam.carter:password@SGCDC001.SGC.HWS.MIL",
-#         "start_time": "2022-12-28 23:55:59",
-#         "end_time": "2022-12-28 23:55:59",
-#         "uuid": None,
-#         "gw_id": None,
-#         "source_host": None,
-#         "operator": None,
-#         "destination_host": None,
-#         "tool": None,
-#         "user_context": None,
-#         "output": "",
-#         "description": None,
-#         "comments": "Logged by terminal_sync",
-#         "tags": None,
-#     }
+def test_iter(filled_out_entry) -> None:
+    """Verify the `__iter__()` function successfully loops through all attributes and returns the correct values
 
-#     for attr, value in attrs.items():
-#         assert basic_entry.__iter__() == (attr, value)
+    Args:
+        filled_out_entry (_type_): An Entry object with all fields set
+    """
+    attrs: dict[str, int | str] = {
+        "command": "proxychains4 python3 smbclient.py SGC.HWS.MIL/sam.carter:password@SGCDC001.SGC.HWS.MIL",
+        "start_time": "2022-12-01 09:30:00",
+        "end_time": "2022-12-01 09:30:00",
+        "gw_id": 1,
+        "source_host": "localhost (127.0.0.1)",
+        "operator": "neo",
+        "destination_host": "",
+        "tool": "smbclient.py",
+        "user_context": "SGC.HWS.MIL/sam.carter",
+        "output": "Success",
+        "description": "Uploaded files to target",
+        "comments": "PowerShell Session: bd58093b-9b74-4f49-b71f-7f6dcf4be130",
+        # "tags": None,
+    }
+    entry_attr: str
+    entry_value: Any
+
+    gen: Generator = filled_out_entry.__iter__()
+
+    assert isinstance(gen, Generator)
+
+    # Verify the correct values are returned
+    for attr, value in attrs.items():
+        entry_attr, entry_value = next(gen)
+        assert entry_attr == attr
+        assert entry_value == value
+
+    # Verify there are no remaining attributes
+    with raises(StopIteration):
+        next(gen)
+
+
+# if __name__ == "__main__":
+#     test_update(filled_out_entry())

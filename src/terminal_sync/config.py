@@ -1,19 +1,23 @@
-# -*- coding: utf-8 -*-
 """Defines a Config object used to store application settings"""
 
 # Standard Libraries
 import logging
 import os
+from dataclasses import asdict
+from dataclasses import dataclass
+from dataclasses import field
+from json import loads
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
+from typing import Generator
 
 # Third-party Libraries
 import yaml
 
-
 logger = logging.getLogger(__name__)
 
 
+@dataclass
 class Config:
     """Defines a Config object used to store application settings
 
@@ -21,112 +25,77 @@ class Config:
     files, and the resulting values will be overridden by any matching environment variables.
 
     To prevent runtime errors caused for invalid config file or environment variable values, type checking if performed.
-    The final type of each setting is checked against the type of the setting provided in the default dictionary or command-line arguments (e.g., from argparse).
+    The final type of each setting is checked against the type of the setting provided in the default dictionary or
+    command-line arguments (e.g., from argparse).
     """
 
-    def __init__(
-        self,
-        defaults: dict[str, Any],
-        config_filepaths: Optional[Path | list[Path]] = None,
-        cli_args: dict[str, Any] = None,
-    ) -> None:
-        """Initialize the Config object
+    gw_api_key_graphql: str = ""
+    gw_api_key_rest: str = ""
+    gw_description_token: str = "#desc"
+    gw_oplog_id: int = 0
+    gw_url: str = ""
+    operator: str | None = None
+    termsync_config: Path = Path("config.yaml")
+    termsync_listen_host: str = "0.0.0.0"
+    termsync_listen_port: int = 8000
+    termsync_timeout_seconds: int = 10
 
-        Args:
-            defaults (dict[str, Any]): A dictionary containing default values for all configuration settings
-            config_filepaths (Optional[Path  |  list[Path]], optional): The path to a YAML config file or a list of
-                such paths
-            cli_args (dict[str, Any], optional): A dictionary of command-line arguments
+    # TODO: Automatically add keywords "exported" by registered command parsers
+    # TODO: This list should only contain keywords that don't have an associated command parser
+    termsync_keywords: list[str] = field(default_factory=list)
 
-        Raises:
-            FileNotFoundError: If one of the specified config files does not exist
-            YAMLError: If there was an error parsing a YAML config
-        """
-        # Ensure parameters are properly initialized
-        config_filepaths = config_filepaths or []
-        config_filepaths = config_filepaths if type(config_filepaths) == list else [config_filepaths]
-        cli_args = {} if cli_args is None else cli_args
-
-        # Initialize settings (to a copy of defaults so that the assert below will work properly)
+    def __post_init__(self) -> None:
+        """Override default settings with values from the config file or environment variables"""
         setting_name: str
-        settings: dict[str, Any] = {} if defaults is None else dict(**defaults)
-
-        # Merge the command-line arguments with the defaults before baselining types
-        if cli_args:
-            settings.update({arg: value for arg, value in cli_args.items() if value is not None})
-
-        # Save the type of each setting and use it for type checking
-        setting_types = {setting_name: type(value) for setting_name, value in settings.items()}
-
-        # Load settings from config file, if specified
-        # Supports multiple config files, with later configs overriding values in previous ones
-        for filepath in config_filepaths:
-            with open(filepath, "r") as in_file:
-                settings.update(yaml.safe_load(in_file) or {})
+        value: Any
+        new_value: Any
 
         # Load environment variables from .env file
         try:
             # Note: Imported here rather than at the top because it is optional
-            from dotenv import load_dotenv
+            from dotenv import load_dotenv  # isort:skip
 
             load_dotenv()
         except ImportError:
             logger.warning('dotenv is not installed; skipping loading ".env"')
 
+        # Override the default config filepath using an environment variable, if it exists
+        config_filepath: Path = Path(os.getenv("TERMSYNC_CONFIG") or self.termsync_config)
+
+        # Load settings from config file, if it exists
+        if config_filepath.exists():
+            logger.info(f"Logging config from: {config_filepath}")
+
+            with open(config_filepath) as in_file:
+                for setting_name, value in (yaml.safe_load(in_file) or {}).items():
+                    if hasattr(self, setting_name):
+                        setattr(self, setting_name, value)
+                    else:
+                        raise Exception(f"{setting_name} is not a supported setting")
+        else:
+            logger.warning(f"Unable to load config from file; {config_filepath} does not exist")
+
         # Override settings with any matching environment variables
-        settings.update({setting: os.getenv(setting.upper()) for setting in settings if os.getenv(setting.upper())})
+        for setting_name, value in self:
+            setting_name = setting_name.upper()
 
-        # Re-apply command-line args so they take precedence over everything else
-        # NOTE: Be sure to use 'None' as the default value for CLI args or else this will always override your settings
-        # with the defaults
-        settings.update({arg: value for arg, value in cli_args.items() if value is not None})
+            if new_value := os.getenv(setting_name):
+                # If the setting is a list or dictionary, parse the environment variable as a JSON object
+                if isinstance(value, list | dict):
+                    new_value = loads(new_value)
 
-        # Loop through the stored list of settings rather than self.__dict__ because the latter contains other things we don't want to check, like functions
-        for setting_name, value in settings.items():
-            # Assertion used to identify settings added to the config file but not given a default value
-            assert (
-                setting_name in defaults or setting_name in cli_args
-            ), f"{setting_name} does not appear in default_settings or command-line parameters"
+                setattr(self, setting_name, new_value)
 
-            # If a value begins with '%%', use the value of an existing setting
-            if type(value) == str and value.startswith("%%"):
-                settings[setting_name] = settings.get(value[2:])
+        if not self.gw_api_key_graphql and not self.gw_api_key_rest:
+            raise Exception("No GhostWriter API key specified")
 
-            # Perform type checking
-            if not isinstance(settings.get(setting_name), setting_types.get(setting_name)):
-                raise TypeError(
-                    f'"{setting_name}" has type {type(settings.get(setting_name))} rather than {setting_type}'
-                )
+        if self.gw_description_token not in self.termsync_keywords:
+            self.termsync_keywords.append(self.gw_description_token)
 
-        # Add settings to the config object itself (for convenience)
-        for setting_name, value in settings.items():
-            setattr(self, setting_name, value)
-
-        # Save a list of the setting names, so we can easily loop through settings on the config object
-        # without getting extraneous items like built-in functions
-        self.settings: list[str] = sorted(settings.keys())
-
-    def __iter__(self) -> tuple[str, str]:
-        """Generator that iterates through the attributes of a Config object
+    def __iter__(self) -> Generator:
+        """Iterate through the object's attributes
 
         Yields:
             A tuple containing an attribute name and its value
         """
-        for name in self.settings:
-            yield name, getattr(self, name)
-
-    def __repr__(self):
-        """Return a JSON string of the Config object
-
-        Returns:
-            A JSON representation of the Config object
-        """
-        return str(dict(self)).replace("'", '"')
-
-    def __str__(self):
-        """Return a YAML string of the Config object
-
-        Returns:
-            A YAML representation of the Config object
-        """
-        return yaml.dump(dict(self))
+        yield from asdict(self).items()

@@ -1,0 +1,29 @@
+# Exclude anything beginning with `.`
+.*
+
+# Explicitly exclude git and editor files (just in case)
+**/.git
+**/.github
+**/.gitignore
+**/.gitattributes
+**/.vscode
+
+# Exclude Docker and Docker Compose files
+**/Dockerfile
+docker-compose.yaml
+
+# Exclude project documentation
+docs
+# CONTRIBUTORS.txt
+LICENSE
+mkdocs.yml
+
+# Exclude local cached files
+**/__pycache__
+build
+
+# Exclude other files not needed in a container
+**/config_template.yaml
+config.yaml
+terminal_sync.*
+tests

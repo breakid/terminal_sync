@@ -9,7 +9,7 @@ gw_oplog_id: 0
 # Name/identifier of the user creating the log entries
 operator: neo
 
-# One of the following GhostWriter API keys MUST be specified; if both are specified, terminal_sync 
+# One of the following GhostWriter API keys MUST be specified; if both are specified, terminal_sync
 # will default to using the GraphQL API
 
 # A GhostWriter GraphQL API key. To generate:
@@ -17,10 +17,10 @@ operator: neo
 #   2. Click on your user profile icon in the upper-right corner
 #   3. Scroll down to the **API Tokens** section and click **Create**
 #   4. Provide a name and expiration date, then click **Submit**
-gw_api_key_graphql: 
+gw_api_key_graphql:
 
 # A GhostWriter REST API key. This key is generated when, and only when, a new Oplog is created
-gw_api_key_rest: 
+gw_api_key_rest:
 
 # Anything appearing after this token in a shell command will be logged to the entry's Description field
 # Note: Including this token will force any command where it is provided to be logged
