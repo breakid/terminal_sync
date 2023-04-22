@@ -144,19 +144,19 @@ async def log_command(msg: Message) -> tuple[Entry, str]:
             raise Exception("Unknown error")
 
         except TimeoutError:
-            error_msg = f"A timeout occured while trying to connect to Ghostwriter at {config.gw_url}"
+            error_msg = f"A timeout occurred while connecting to {config.gw_url}"
             logger.exception(error_msg)
             raise HTTPException(status_code=status.HTTP_504_GATEWAY_TIMEOUT, detail=error_msg)
         except TransportQueryError as e:
-            error_msg = f"Error encountered while fetching GraphQL schema: {e}"
-            logger.exception(error_msg)
+            logger.exception(f"Error encountered while fetching GraphQL schema: {e}")
+            error_msg = e.errors[0].get("message")
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=error_msg)
         except GraphQLError as e:
             error_msg = f"Error with GraphQL query: {e}"
             logger.exception(error_msg)
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=error_msg)
         except Exception as e:
-            error_msg = f"An error occurred while trying to log to GhostWriter: {e}"
+            error_msg = str(e)
             logger.exception(error_msg)
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=error_msg)
 
@@ -233,8 +233,7 @@ def run(host: str = config.termsync_listen_host, port: int = config.termsync_lis
         port (int, optional): The port where the server will bind. Defaults to config.termsync_listen_port.
     """
     # Note: Imported here rather than at the top because it is optional
-    # Third-party Libraries
-    import uvicorn
+    import uvicorn  # isort:skip
 
     uvicorn.run(app, host=host, port=port)
 

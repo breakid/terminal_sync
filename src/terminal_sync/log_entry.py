@@ -193,7 +193,3 @@ class Entry:
             # Prevent accidentally overwriting values or adding attributes that shouldn't exist
             if value is not None and hasattr(self, attr) and attr != "start_time":
                 setattr(self, attr, value)
-
-        # Ensure the end_time is still equal to or greater than the start_time
-        # if self.end_time < self.start_time:
-        #     self.end_time = self.start_time

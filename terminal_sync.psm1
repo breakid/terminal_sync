@@ -2,6 +2,9 @@
 # ******                     Configuration Settings                      ******
 # =============================================================================
 
+# The name / identifier of the user creating the log entries
+$env:OPERATOR = ""
+
 # Enable / disable terminal_sync logging at runtime
 $global:TermSyncLogging = $true
 
@@ -26,10 +29,12 @@ $global:TimeoutSec = 10
 
 function Enable-TermSync {
     $global:TermSyncLogging = $true
+    Write-Host "[+] terminal_sync logging enabled"
 }
 
 function Disable-TermSync {
     $global:TermSyncLogging = $False
+    Write-Host "[+] terminal_sync logging disabled"
 }
 
 function Set-TermSyncVerbosity {
@@ -40,6 +45,8 @@ function Set-TermSyncVerbosity {
         [DisplayLevel]$Level
     )
     $global:TermSyncVerbosity = $Level
+
+    Write-Host "[+] terminal_sync log level set to: $Level"
 }
 
 # =============================================================================
@@ -212,13 +219,13 @@ function Prompt {
                 }
                 catch {
                     # Get the HTTP status code
-                    # $StatusCode = $_.Exception.Response.StatusCode.value__
+                    $StatusCode = $_.Exception.Response.StatusCode.value__
 
                     # An error occurred; the server will return a JSON object with a "detail" attribute
                     # (e.g., '{"detail":"An error occurred while trying to log to GhostWriter: Cannot connect to host"}')
-                    if ($_.detail) {
+                    if ($StatusCode) {
                         # If an exception occurred server-side; throw an exception with the message from the server
-                        throw $_.detail
+                        throw $($_ | ConvertFrom-Json).detail
                     }
                     elseif ($_.ToString() -eq "Unable to connect to the remote server") {
                         if ($TermSyncVerbosity -gt [DisplayLevel]::IgnoreTermSyncConnError) {

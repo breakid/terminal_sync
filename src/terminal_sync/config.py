@@ -21,12 +21,21 @@ logger = logging.getLogger(__name__)
 class Config:
     """Defines a Config object used to store application settings
 
-    Default settings passed into the constructor will be overridden by values loaded from specified config
-    files, and the resulting values will be overridden by any matching environment variables.
+    Default settings defined in this class will be overridden by values in the config file, and both will be overridden
+    by any matching environment variables (i.e., upper-case setting name).
 
-    To prevent runtime errors caused for invalid config file or environment variable values, type checking if performed.
-    The final type of each setting is checked against the type of the setting provided in the default dictionary or
-    command-line arguments (e.g., from argparse).
+    Attributes:
+        gw_api_key_graphql (str): A GhostWriter GraphQL API key
+        gw_api_key_rest (str): A GhostWriter REST API key
+        gw_description_token (str): String used to delimit the command and an optional description; defaults to `#desc`
+        gw_oplog_id (int): The ID number of the GhostWriter Oplog where entries will be recorded
+        gw_url (str): The URL for your GhostWriter instance
+        operator (str): The name / identifier of the user creating the log entries
+        termsync_config (str): The path to the config file; defaults to `config.yaml`
+        termsync_listen_host (str): The host address where the server will bind
+        termsync_listen_port (int): The host port where the server will bind
+        termsync_timeout_seconds (int): The number of seconds the server will wait for a response from GhostWriter
+        termsync_keywords (list[str]): List of keywords that will trigger logging a command to GhostWriter
     """
 
     gw_api_key_graphql: str = ""
@@ -36,7 +45,7 @@ class Config:
     gw_url: str = ""
     operator: str | None = None
     termsync_config: Path = Path("config.yaml")
-    termsync_listen_host: str = "0.0.0.0"
+    termsync_listen_host: str = "127.0.0.1"
     termsync_listen_port: int = 8000
     termsync_timeout_seconds: int = 10
 

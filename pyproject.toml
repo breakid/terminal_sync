@@ -64,5 +64,5 @@ dev = [
 [tool.pdm.scripts]
 check = "pre-commit run --all-files"
 code = "code terminal_sync.code-workspace"
-serve = "uvicorn api:app --reload"
+serve = "uvicorn terminal_sync.api:app"
 test = "pytest"

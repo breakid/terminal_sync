@@ -181,10 +181,17 @@ class GhostWriterClient:
         """
         logger.debug(f"[REST] Creating entry for: {entry}")
 
+        data: dict[str, int | str] = entry.to_rest()
+        data["oplog_id"] = self.oplog_id
+
         async with aiohttp.ClientSession(headers=self.headers) as session:
-            async with session.post(self.rest_url, json=entry.to_rest()) as resp:
+            async with session.post(self.rest_url, json=data) as resp:
                 resp = await resp.json()
                 logger.debug(f"Response: {resp}")
+
+                if resp.get("detail"):
+                    raise Exception(resp.get("detail"))
+
                 logger.info(f'Logged "{entry.command}" to GhostWriter as ID: {resp.get("id")}')
                 return resp.get("id")
 
@@ -204,10 +211,17 @@ class GhostWriterClient:
 
         url: str = f"{self.rest_url}{entry.gw_id}/?format=json"
 
+        data: dict[str, int | str] = entry.to_rest()
+        data["oplog_id"] = self.oplog_id
+
         async with aiohttp.ClientSession(headers=self.headers) as session:
-            async with session.put(url, json=entry.to_rest()) as resp:
+            async with session.put(url, json=data) as resp:
                 resp = await resp.json()
                 logger.debug(f"Response: {resp}")
+
+                if resp.get("detail"):
+                    raise Exception(resp.get("detail"))
+
                 logger.info(f"Updated GhostWriter entry with ID: {entry.gw_id}")
                 return resp.get("id")
 

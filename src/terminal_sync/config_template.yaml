@@ -3,11 +3,8 @@
 gw_url: ""
 
 # The ID number of the GhostWriter Oplog where entries will be recorded. This can be found in the Oplog URL
-# Example: "{gw_url}/oplog/{gw_oplog_id}/entries"
+# Example: "<gw_url>/oplog/<gw_oplog_id>/entries"
 gw_oplog_id: 0
-
-# Name/identifier of the user creating the log entries
-operator: neo
 
 # One of the following GhostWriter API keys MUST be specified; if both are specified, terminal_sync
 # will default to using the GraphQL API
@@ -26,9 +23,21 @@ gw_api_key_rest:
 # Note: Including this token will force any command where it is provided to be logged
 gw_description_token: "#desc"
 
+# Name/identifier of the user creating the log entries
+operator: neo
+
 # List of keywords that will trigger logging a command to GhostWriter
 # The `gw_description_token` is automatically added to this list
 termsync_keywords:
   - aws
   - kubectl
   - proxychains
+
+# The host address where the server will bind
+termsync_listen_host: "127.0.0.1"
+
+# The host port where the server will bind
+termsync_listen_port: 8000
+
+# The number of seconds the server will wait for a response from GhostWriter
+termsync_timeout_seconds: 10
