@@ -65,7 +65,7 @@ if [[ ! -f $BASH_PREEXEC_PATH ]]; then
 
     # Default to installing unless the user says no
     if [[ ! $REPLY =~ ^[Nn]$ ]]; then
-        echo "source '$1'" >> ~/.bashrc
+        echo "source '$(realpath $PWD/$BASH_SOURCE)'" >> ~/.bashrc
         echo -e "\e[1;32m[+] Successfully added terminal_sync.sh to ~/.bashrc\e[0m"
     fi
 fi
