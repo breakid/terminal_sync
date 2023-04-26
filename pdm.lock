@@ -237,7 +237,7 @@ dependencies = [
 
 [[package]]
 name = "pytest"
-version = "7.3.0"
+version = "7.3.1"
 requires_python = ">=3.7"
 summary = "pytest: simple powerful testing with Python"
 dependencies = [
@@ -820,9 +820,9 @@ content_hash = "sha256:8a46f52a1160bf221c4a68c8f01e21ede4fbef34e20963300d30687a2
     {url = "https://files.pythonhosted.org/packages/fa/c2/3df79cd00e65678fce12e59e8c95378a992a93d7b9f9510d4f1f65df1936/pydantic-1.10.7-cp311-cp311-win_amd64.whl", hash = "sha256:b4a849d10f211389502059c33332e91327bc154acc1845f375a99eca3afa802d"},
     {url = "https://files.pythonhosted.org/packages/fd/66/3da2e7c0306251435bd61ae9da52db8a00672fdf2b2db1e3efe1692f41dd/pydantic-1.10.7-cp37-cp37m-musllinux_1_1_i686.whl", hash = "sha256:950ce33857841f9a337ce07ddf46bc84e1c4946d2a3bba18f8280297157a3fd1"},
 ]
-"pytest 7.3.0" = [
-    {url = "https://files.pythonhosted.org/packages/2b/a6/22c1138c2a7b60c9eb9ddeac017d82a58dfd9661651c721e7466af648764/pytest-7.3.0.tar.gz", hash = "sha256:58ecc27ebf0ea643ebfdf7fb1249335da761a00c9f955bcd922349bcb68ee57d"},
-    {url = "https://files.pythonhosted.org/packages/83/b8/345f25e35406da60b5cb0cb9de9f92a96f44eae618dc2cc4a00a2bf416f9/pytest-7.3.0-py3-none-any.whl", hash = "sha256:933051fa1bfbd38a21e73c3960cebdad4cf59483ddba7696c48509727e17f201"},
+"pytest 7.3.1" = [
+    {url = "https://files.pythonhosted.org/packages/1b/d1/72df649a705af1e3a09ffe14b0c7d3be1fd730da6b98beb4a2ed26b8a023/pytest-7.3.1-py3-none-any.whl", hash = "sha256:3799fa815351fea3a5e96ac7e503a96fa51cc9942c3753cda7651b93c1cfa362"},
+    {url = "https://files.pythonhosted.org/packages/ec/d9/36b65598f3d19d0a14d13dc87ad5fa42869ae53bb7471f619a30eaabc4bf/pytest-7.3.1.tar.gz", hash = "sha256:434afafd78b1d78ed0addf160ad2b77a30d35d4bdf8af234fe621919d9ed15e3"},
 ]
 "python-dotenv 1.0.0" = [
     {url = "https://files.pythonhosted.org/packages/31/06/1ef763af20d0572c032fa22882cfbfb005fba6e7300715a37840858c919e/python-dotenv-1.0.0.tar.gz", hash = "sha256:a8df96034aae6d2d50a4ebe8216326c61c3eb64836776504fcca410e5937a3ba"},

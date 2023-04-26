@@ -24,14 +24,11 @@ TERMSYNC_TIMEOUT=10
 # NOTE: These installation steps are run automatically every time the script is invoked to make sure the necessary
 # dependencies are in place and haven't been removed since the last execution
 
-# Get the installation directory from the path to this script
-INSTALL_DIR="$(dirname $1)"
-
-echo "INSTALL_DIR: $INSTALL_DIR"
+BASH_PREEXEC_PATH="~/bash-preexec.sh"
 
 # If bash-preexec.sh does not exist, warn the user about running scripts from the Internet,
 # if they accept the risk, download it
-if [[ ! -f ${INSTALL_DIR}/bash-preexec.sh ]]; then
+if [[ ! -f $BASH_PREEXEC_PATH ]]; then
     echo -e "\e[31m[!] Security Warning\e[0m: This script will download and run bash-preexec.sh (https://raw.githubusercontent.com/rcaloras/bash-preexec/master/bash-preexec.sh). Downloading and running scripts from the Internet can be dangerous; you are advised to review the contents of this script before continuing."
 
     read -p "[?] I accept the risk [y|N]: " -N 1
@@ -49,15 +46,15 @@ if [[ ! -f ${INSTALL_DIR}/bash-preexec.sh ]]; then
 
     # Download bash-preexec.sh
     # This is used to hook commands before they execute
-    curl https://raw.githubusercontent.com/rcaloras/bash-preexec/master/bash-preexec.sh -o ${INSTALL_DIR}/.bash-preexec.sh
+    curl https://raw.githubusercontent.com/rcaloras/bash-preexec/master/bash-preexec.sh > $BASH_PREEXEC_PATH
 
-    if [[ ! -f ${INSTALL_DIR}/bash-preexec.sh ]]; then
+    if [[ ! -f $BASH_PREEXEC_PATH ]]; then
         echo -e "\e[31m[-] Error: Failed to download bash-preexec.sh\e[0m"
         return 1
     fi
 
     # Ensure bash-preexec.sh is executable
-    chmod +x ${INSTALL_DIR}/.bash-preexec.sh
+    chmod +x $BASH_PREEXEC_PATH
 
     echo -e "\e[1;32m[+] Successfully downloaded bash-preexec.sh\e[0m"
 
@@ -81,10 +78,10 @@ for package in $packages_needed; do
     if [[ ! -x $(command -v $package) ]]; then
         echo -e "\e[1;34m[*] ${package} not installed; attempting to install...\e[0m"
 
-        if [ -x "$(command -v apk)" ];       then sudo apk add --no-cache $packages_needed
-        elif [ -x "$(command -v apt-get)" ]; then sudo apt-get install $packages_needed
-        elif [ -x "$(command -v dnf)" ];     then sudo dnf install $packages_needed
-        elif [ -x "$(command -v zypper)" ];  then sudo zypper install $packages_needed
+        if [ -x "$(command -v apk)" ];       then sudo apk add -y --no-cache $packages_needed
+        elif [ -x "$(command -v apt-get)" ]; then sudo apt-get install -y $packages_needed
+        elif [ -x "$(command -v dnf)" ];     then sudo dnf install -y $packages_needed
+        elif [ -x "$(command -v zypper)" ];  then sudo zypper install -y $packages_needed
         else
             echo -e "\e[31m[-] Error: Package manager not found. You must manually install: ${packages_needed}\e[0m" >&2
             return 1
@@ -117,7 +114,7 @@ function Disable-TermSync {
     echo "[+] terminal_sync logging disabled"
 }
 
-function set_termsync_versbosity() {
+function Set-TermSyncVersbosity() {
     # num_levels=${#DISPLAY_LEVELS[@]}
 
     echo "Display Levels:"
@@ -153,7 +150,7 @@ function set_termsync_versbosity() {
 # =============================================================================
 
 # Load bash-preexec to enable `preexec` and `precmd` hooks
-source ${INSTALL_DIR}/bash-preexec.sh
+source $BASH_PREEXEC_PATH
 
 # Set the history time format to timestamp each command run (format: 'YYYY-mm-dd HH:MM:SS')
 # This is useful as a fallback and is expected by the `sed` command that parses the command line from the history
