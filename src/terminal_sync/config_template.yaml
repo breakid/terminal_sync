@@ -21,10 +21,13 @@ gw_api_key_rest:
 
 # Anything appearing after this token in a shell command will be logged to the entry's Description field
 # Note: Including this token will force any command where it is provided to be logged
-gw_description_token: "#desc"
+#gw_description_token: "#desc"
 
 # Name/identifier of the user creating the log entries
-operator: neo
+#operator:
+
+# The directory where JSON log files are written
+#termsync_json_log_dir: "log_archive"
 
 # List of keywords that will trigger logging a command to GhostWriter
 # The `gw_description_token` is automatically added to this list
@@ -32,12 +35,14 @@ termsync_keywords:
   - aws
   - kubectl
   - proxychains
-
 # The host address where the server will bind
-termsync_listen_host: "127.0.0.1"
+#termsync_listen_host: "127.0.0.1"
 
 # The host port where the server will bind
-termsync_listen_port: 8000
+#termsync_listen_port: 8000
+
+# Whether to save all logs using the JSON file (will incur a performance penalty)
+#termsync_save_all_local: no
 
 # The number of seconds the server will wait for a response from GhostWriter
-termsync_timeout_seconds: 10
+#termsync_timeout_seconds: 10

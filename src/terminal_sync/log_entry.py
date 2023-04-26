@@ -17,6 +17,7 @@ class Entry:
     """Defines a GhostWriter log entry
 
     Attributes:
+        oplog_id (int): The ID of the GhostWriter Oplog where entries will be written
         command (str): The text of the command executed
         start_time (datetime): Timestamp when the command/activity began
         end_time (datetime): Timestamp when the command/activity completed
@@ -29,22 +30,24 @@ class Entry:
         user_context (str | None): Identifier for the credentials used for the command/activity
         output (str): The output or results of the command/activity
             Given the limited space in the GhostWriter UI, this is usually a success or failure note
-        description (str | None): The goal/intent/reason for running the command or performing the action
+        description (str): The goal/intent/reason for running the command or performing the action
         comments (str): Misc additional information about the command / activity
     """
 
     command: str
-    start_time: datetime = datetime.utcnow()
+    comments: str = "Logged by terminal_sync"
+    description: str = ""
+    destination_host: str | None = None
+    start_time: datetime = datetime.utcnow()  # start_time must be initialized before end_time
     end_time: datetime = datetime.utcnow()
     gw_id: int | None = None
-    source_host: str | None = None
     operator: str | None = None
-    destination_host: str | None = None
+    oplog_id: int = 0
+    output: str = ""
+    source_host: str | None = None
     tool: str | None = None
     user_context: str | None = None
-    output: str = ""
-    description: str | None = None
-    comments: str = "Logged by terminal_sync"
+    uuid: str = ""
     # TODO: Tags are not supported by the current GraphQL interface
     # tags (list[str] | None): An arbitrary list of tags
     # tags: list[str] = field(default_factory=list)
@@ -99,7 +102,25 @@ class Entry:
         # "AttributeError: 'property' object has no attribute 'strip'"
         # if the command was not explicitly set when initializing an object
         # (even when a default value was provided)
-        self._command = "" if isinstance(command, property) else command.strip()
+        self._command = command.strip() if isinstance(command, str) else ""
+
+    @property  # type: ignore[no-redef]
+    def description(self) -> str:
+        """Return the description
+
+        Returns:
+            str: The entry description
+        """
+        return self._description
+
+    @description.setter
+    def description(self, description: str) -> None:
+        """Set the description, stripping whitespace from the beginning and end
+
+        Args:
+            description (str): The new description
+        """
+        self._description = description.strip() if isinstance(description, str) else ""
 
     @property  # type: ignore[no-redef]
     def start_time(self) -> str:
@@ -117,7 +138,7 @@ class Entry:
         Args:
             start_time (datetime): The new start_time
         """
-        self._start_time = datetime.utcnow() if isinstance(start_time, property) else start_time
+        self._start_time = start_time if isinstance(start_time, datetime) else datetime.utcnow()
 
     @property  # type: ignore[no-redef]
     def end_time(self) -> str:
@@ -135,8 +156,11 @@ class Entry:
         Args:
             end_time (datetime): The new end_time
         """
-        end_time = datetime.utcnow() if isinstance(end_time, property) else end_time
+        # Ensure end_date is a datetime object
+        end_time = end_time if isinstance(end_time, datetime) else datetime.utcnow()
 
+        # Note: Use _start_time rather than start_time to avoid:
+        #   TypeError: '<' not supported between instances of 'datetime.datetime' and 'str'
         if end_time < self._start_time:
             self._end_time = self._start_time
         else:
@@ -155,7 +179,42 @@ class Entry:
         Returns:
             Entry: The new Entry object
         """
-        return cls(**{key: value for key, value in args.items() if hasattr(cls, key)})
+        # Note: Used __dataclass_fields__ rather than hasattr() because hasattr() returns false unless the field
+        # has a default value
+        return cls(**{key: value for key, value in args.items() if key in cls.__dataclass_fields__})
+
+    def gw_fields(self) -> dict[str, int | str]:
+        """Return a dictionary of non-empty entry attributes using the Ghostwriter field names
+
+        Returns:
+            A dictionary of fields for the GhostWriter REST API
+        """
+        # Map attribute names to REST API key names
+        field_map: dict[str, str] = {
+            "destination_host": "dest_ip",
+            "end_time": "end_date",
+            "operator": "operator_name",
+            "source_host": "source_ip",
+            "start_time": "start_date",
+        }
+
+        omitted_fields: list[str] = ["gw_id", "uuid"]
+
+        # Construct a dictionary containing all non-empty entry attributes
+        # Substitute the entry attribute name with the REST-specific field name
+        return {
+            field_map.get(attr, attr): value for attr, value in self if value is not None and attr not in omitted_fields
+        }
+
+    def json_filename(self) -> str:
+        """Return a JSON filename for this entry with format: <oplog_id>_<start_time>_<uuid>.json
+
+        This format ensures logs will first be grouped by oplog then listed chronologically
+
+        Returns:
+            str: The JSON filename for this entry
+        """
+        return f"{self.oplog_id}_{self._start_time.strftime('%F_%H%M%S')}_{self.uuid}.json"
 
     def fields(self) -> dict[str, int | str]:
         """Return a dictionary of the entry's non-empty attributes
@@ -165,31 +224,16 @@ class Entry:
         """
         return {attr: value for attr, value in self if value is not None}
 
-    def to_rest(self) -> dict[str, int | str]:
-        """Return a dictionary of non-empty entry attributes using the keys expected by Ghostwriter's Oplog REST API
-
-        Returns:
-            A dictionary of fields for the GhostWriter REST API
-        """
-        # Map attribute names to REST API key names
-        field_map: dict[str, str] = {
-            "end_time": "end_date",
-            "operator": "operator_name",
-            "source_host": "source_ip",
-            "start_time": "start_date",
-        }
-
-        # Construct a dictionary containing all non-empty entry attributes
-        # Substitute the entry attribute name with the REST-specific field name
-        return {field_map.get(attr, attr): value for attr, value in self if value is not None}
-
     def update(self, args: dict[str, Any]) -> None:
         """Update specified entry attributes
 
         Args:
             args (dict[str, Any]): A dictionary mapping attributes names to their new values
         """
+        protected_fields: list[str] = ["oplog_id", "start_time", "uuid"]
+
         for attr, value in args.items():
             # Prevent accidentally overwriting values or adding attributes that shouldn't exist
-            if value is not None and hasattr(self, attr) and attr != "start_time":
+            if value is not None and attr in self.__dataclass_fields__ and attr not in protected_fields:
+                # if value is not None and self.hasattr(self, key) and key not in protected_fields:
                 setattr(self, attr, value)

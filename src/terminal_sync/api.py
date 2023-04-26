@@ -1,10 +1,13 @@
 """A REST API server for logging terminal commands to GhostWriter"""
 
 # Standard Libraries
+import json
 import logging
 import sys
 from asyncio.exceptions import TimeoutError
 from datetime import datetime
+from os import makedirs
+from pathlib import Path
 from re import match
 from time import gmtime
 
@@ -18,6 +21,7 @@ from pydantic import BaseModel
 
 # Internal Libraries
 from terminal_sync.config import Config
+from terminal_sync.export_csv import export_csv
 from terminal_sync.ghostwriter import GhostWriterClient
 from terminal_sync.log_entry import Entry
 
@@ -48,21 +52,26 @@ logging.basicConfig(
 )
 logger = logging.getLogger("terminal_sync")
 
+gw_client: GhostWriterClient | None = None
+
 try:
     # Get config settings from defaults, config file, and environment variables
     config = Config()
 
-    # Create a GhostWriter client using config settings
-    gw_client = GhostWriterClient(
-        url=config.gw_url,
-        oplog_id=config.gw_oplog_id,
-        graphql_api_key=config.gw_api_key_graphql,
-        rest_api_key=config.gw_api_key_rest,
-        timeout_seconds=config.termsync_timeout_seconds,
-    )
+    # If no API key specified, skip creating the client
+    # This allows terminal_sync to be used for local logging without a GhostWriter instance
+    if config.gw_api_key_graphql or config.gw_api_key_rest:
+        # Create a GhostWriter client using config settings
+        gw_client = GhostWriterClient(
+            url=config.gw_url,
+            graphql_api_key=config.gw_api_key_graphql,
+            rest_api_key=config.gw_api_key_rest,
+            timeout_seconds=config.termsync_timeout_seconds,
+        )
 except Exception as e:
     logger.exception(e)
     sys.exit(1)
+
 
 # =============================================================================
 # ******                            API Server                            *****
@@ -78,20 +87,40 @@ class Message(BaseModel):
     """
 
     command: str
-    uuid: str = ""
+    comments: str | None = None
+    description: str | None = None
     gw_id: int | None = None
+    operator: str | None = config.operator
+    oplog_id: int = config.gw_oplog_id
+    output: str | None = None
+    source_host: str | None = None
     start_time: datetime = datetime.utcnow()
     end_time: datetime = datetime.utcnow()
-    source_host: str | None = None
-    description: str | None = None
-    operator: str | None = config.operator
-    output: str | None = None
-    comments: str | None = None
+    uuid: str = ""
 
 
 # Dictionary used to store a mapping of UUIDs to log entries
 # This allows terminal_sync to lookup and updated previous log entries when the command completes
 log_entries: dict[str, Entry] = {}
+
+
+async def save_log(uuid: str, entry: Entry) -> None:
+    """Save the entry to a JSON file
+
+    By default, used to cache entries if they fail to log to GhostWriter but can be enabled for all logs
+
+    Args:
+        uuid (str): A universally unique identifier for the entry
+        entry (Entry): The entry to be saved
+    """
+    logger.debug(f'Saving log with UUID "{uuid}": {entry}')
+
+    # Make sure the output directory exists
+    makedirs(config.termsync_json_log_dir, exist_ok=True)
+
+    # Write updated dictionary back to disk
+    with open(Path(config.termsync_json_log_dir) / entry.json_filename(), "w") as out_file:
+        json.dump(entry.gw_fields(), out_file)
 
 
 async def log_command(msg: Message) -> tuple[Entry, str]:
@@ -113,6 +142,10 @@ async def log_command(msg: Message) -> tuple[Entry, str]:
 
     # Check whether any of the keywords that trigger logging appear in the command
     if any(keyword in msg.command for keyword in config.termsync_keywords):
+        # Flag used to determine whether the entry was logged successfully
+        # If not, the 'finally' clause will save the log locally
+        saved: bool = False
+
         try:
             # Parse the description from the command, if applicable
             if config.gw_description_token in msg.command:
@@ -133,12 +166,18 @@ async def log_command(msg: Message) -> tuple[Entry, str]:
             # Tell static analyzers that `entry` is no longer None
             assert isinstance(entry, Entry)
 
+            # If gw_client isn't initialized, return early and let the 'finally' clause save the log locally
+            if gw_client is None:
+                return (entry, f"[+] Logged to JSON file with UUID: {msg.uuid}")
+
             if entry.gw_id is None:
                 entry.gw_id = await gw_client.create_log(entry)
 
                 if entry.gw_id:
+                    saved = True
                     return (entry, f"[+] Logged to GhostWriter with ID: {entry.gw_id}")
             elif await gw_client.update_log(entry) is not None:
+                saved = True
                 return (entry, f"[+] Updated GhostWriter log: {entry.gw_id}")
 
             raise Exception("Unknown error")
@@ -159,6 +198,9 @@ async def log_command(msg: Message) -> tuple[Entry, str]:
             error_msg = str(e)
             logger.exception(error_msg)
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=error_msg)
+        finally:
+            if entry and (not saved or config.termsync_save_all_local):
+                await save_log(msg.uuid, entry)
 
     # If the command doesn't trigger logging, return HTTP code 204
     raise HTTPException(status_code=status.HTTP_204_NO_CONTENT)
@@ -223,6 +265,16 @@ async def post_exec(msg: Message) -> str:
         del log_entries[msg.uuid]
 
     return response
+
+
+@app.on_event("shutdown")
+async def app_shutdown() -> None:
+    """Export a GhostWriter CSV file on server shutdown"""
+    try:
+        csv_filepath: Path = export_csv(Path(config.termsync_json_log_dir))
+        logger.info(f"Exported cached logs to: {csv_filepath}")
+    except Exception as e:
+        logger.exception(e)
 
 
 def run(host: str = config.termsync_listen_host, port: int = config.termsync_listen_port):

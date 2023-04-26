@@ -24,6 +24,7 @@ build
 
 # Exclude other files not needed in a container
 **/config_template.yaml
+**/log_archive
 config.yaml
 terminal_sync.*
 tests

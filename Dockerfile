@@ -4,6 +4,11 @@ ENV LANG=C.UTF-8
 ENV LC_ALL=C.UTF-8
 ENV LC_TIME=C.UTF-8
 ENV LISTEN_PORT=8000
+# Enable Python optimizations
+ENV PYTHONOPTIMIZE=1
+
+# Create a directory where cached log entries will be stored
+# VOLUME /app/log_archive
 
 WORKDIR /app
 

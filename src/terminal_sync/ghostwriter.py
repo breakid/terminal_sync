@@ -17,10 +17,6 @@ from gql.transport.aiohttp import AIOHTTPTransport
 # Internal Libraries
 from terminal_sync.log_entry import Entry
 
-# from gql.transport.exceptions import TransportQueryError
-# from graphql.error.graphql_error import GraphQLError
-
-
 logger = logging.getLogger("terminal_sync")
 
 # Suppress overly verbose logging
@@ -41,23 +37,23 @@ class GhostWriterClient:
     _insert_query: DocumentNode = gql(
         """
         mutation InsertTerminalSyncLog (
-            $oplog_id: bigint!, $start_time: timestamptz, $end_time: timestamptz, $source_host: String,
-            $destination_host: String, $tool: String, $user_context: String, $command: String, $description: String,
-            $output: String, $comments: String, $operator: String
+            $oplog_id: bigint!, $start_date: timestamptz, $end_date: timestamptz, $source_ip: String,
+            $dest_ip: String, $tool: String, $user_context: String, $command: String, $description: String,
+            $output: String, $comments: String, $operator_name: String
         ) {
             insert_oplogEntry(objects: {
                 oplog: $oplog_id,
-                startDate: $start_time,
-                endDate: $end_time,
-                sourceIp: $source_host,
-                destIp: $destination_host,
+                startDate: $start_date,
+                endDate: $end_date,
+                sourceIp: $source_ip,
+                destIp: $dest_ip,
                 tool: $tool,
                 userContext: $user_context,
                 command: $command,
                 description: $description,
                 output: $output,
                 comments: $comments,
-                operatorName: $operator,
+                operatorName: $operator_name,
             }) {
                 returning { id }
             }
@@ -69,25 +65,25 @@ class GhostWriterClient:
     _update_query: DocumentNode = gql(
         """
         mutation UpdateTerminalSyncLog (
-            $gw_id: bigint!, $oplog_id: bigint!, $start_time: timestamptz, $end_time: timestamptz, $source_host:
-            String, $destination_host: String, $tool: String, $user_context: String, $command: String, $description:
-            String, $output: String, $comments: String, $operator: String,
+            $id: bigint!, $oplog_id: bigint!, $start_date: timestamptz, $end_date: timestamptz, $source_ip: String,
+            $dest_ip: String, $tool: String, $user_context: String, $command: String, $description: String,
+            $output: String, $comments: String, $operator_name: String
         ) {
             update_oplogEntry(where: {
-                id: {_eq: $gw_id}
+                id: {_eq: $id}
             }, _set: {
                 oplog: $oplog_id,
-                startDate: $start_time,
-                endDate: $end_time,
-                sourceIp: $source_host,
-                destIp: $destination_host,
+                startDate: $start_date,
+                endDate: $end_date,
+                sourceIp: $source_ip,
+                destIp: $dest_ip,
                 tool: $tool,
                 userContext: $user_context,
                 command: $command,
                 description: $description,
                 output: $output,
                 comments: $comments,
-                operatorName: $operator,
+                operatorName: $operator_name,
             }) {
                 returning { id }
             }
@@ -95,14 +91,11 @@ class GhostWriterClient:
         """
     )
 
-    def __init__(
-        self, url: str, oplog_id: int, graphql_api_key: str = "", rest_api_key: str = "", timeout_seconds: int = 10
-    ) -> None:
+    def __init__(self, url: str, graphql_api_key: str = "", rest_api_key: str = "", timeout_seconds: int = 10) -> None:
         """Initializes a GhostWriter client
 
         Args:
             url (str): The base URL where GhostWriter is hosted (e.g., "https://ghostwriter.example.com")
-            oplog_id (int): The ID of the GhostWriter Oplog where entries will be written
             graphql_api_key (str, optional): A GhostWriter GraphQL API key. Defaults to "".
             rest_api_key (str, optional): A GhostWriter REST API key. Defaults to "".
             timeout_seconds (int, optional): Seconds the client will wait for a response. Defaults to 10.
@@ -114,14 +107,10 @@ class GhostWriterClient:
         if not url.startswith("http"):
             raise ValueError("Invalid GhostWriter URL")
 
-        if oplog_id < 0:
-            raise ValueError("Oplog ID must be a positive integer")
-
         if not graphql_api_key and not rest_api_key:
             raise ValueError("No GhostWriter API key specified")
 
         self.base_url: str = url.rstrip("/")
-        self.oplog_id: int = oplog_id
 
         self.headers: dict[str, str] = {
             "User-Agent": f"terminal_sync/{metadata.version('terminal_sync')}",
@@ -181,8 +170,7 @@ class GhostWriterClient:
         """
         logger.debug(f"[REST] Creating entry for: {entry}")
 
-        data: dict[str, int | str] = entry.to_rest()
-        data["oplog_id"] = self.oplog_id
+        data: dict[str, int | str] = entry.gw_fields()
 
         async with aiohttp.ClientSession(headers=self.headers) as session:
             async with session.post(self.rest_url, json=data) as resp:
@@ -211,8 +199,7 @@ class GhostWriterClient:
 
         url: str = f"{self.rest_url}{entry.gw_id}/?format=json"
 
-        data: dict[str, int | str] = entry.to_rest()
-        data["oplog_id"] = self.oplog_id
+        data: dict[str, int | str] = entry.gw_fields()
 
         async with aiohttp.ClientSession(headers=self.headers) as session:
             async with session.put(url, json=data) as resp:
@@ -242,9 +229,6 @@ class GhostWriterClient:
         Raises:
             Exception: If an error occurred while communicating with GhostWriter
         """
-        # Add oplog_id to the values passed to GraphQL
-        values["oplog_id"] = self.oplog_id
-
         logger.debug(f"variable_values: {values}")
 
         async with Client(transport=self._transport, fetch_schema_from_transport=True) as session:
@@ -264,7 +248,7 @@ class GhostWriterClient:
         """
         logger.debug(f"[GraphQL] Creating entry for: {entry}")
 
-        resp: dict = await self._execute_query(self._insert_query, entry.fields())
+        resp: dict = await self._execute_query(self._insert_query, entry.gw_fields())
         logger.debug(f"Response: {resp}")
         # Example response: `{'insert_oplogEntry': {'returning': [{'id': 192}]}}`
 
@@ -292,7 +276,7 @@ class GhostWriterClient:
         """
         logger.debug(f"[GraphQL] Updating log entry: {entry}")
 
-        resp: dict = await self._execute_query(self._update_query, entry.fields())
+        resp: dict = await self._execute_query(self._update_query, {"id": entry.gw_id, **entry.gw_fields()})
         logger.debug(f"Response: {resp}")
         # Example response: `{'update_oplogEntry': {'returning': [{'id': 192}]}}`
 

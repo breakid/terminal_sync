@@ -6,13 +6,12 @@ import os
 from dataclasses import asdict
 from dataclasses import dataclass
 from dataclasses import field
-from json import loads
 from pathlib import Path
 from typing import Any
 from typing import Generator
 
 # Third-party Libraries
-import yaml
+from yaml import safe_load
 
 logger = logging.getLogger(__name__)
 
@@ -31,11 +30,14 @@ class Config:
         gw_oplog_id (int): The ID number of the GhostWriter Oplog where entries will be recorded
         gw_url (str): The URL for your GhostWriter instance
         operator (str): The name / identifier of the user creating the log entries
-        termsync_config (str): The path to the config file; defaults to `config.yaml`
+        termsync_config (Path): The path to the config file; defaults to `config.yaml`
+        termsync_json_log_dir (str): The directory where JSON log files are written; defaults to `log_archive`
+        termsync_keywords (list[str]): List of keywords that will trigger logging a command to GhostWriter
         termsync_listen_host (str): The host address where the server will bind
         termsync_listen_port (int): The host port where the server will bind
+        termsync_save_all_local (bool): Whether to save all logs using the JSON file (may have a performance impact);
+            defaults to False
         termsync_timeout_seconds (int): The number of seconds the server will wait for a response from GhostWriter
-        termsync_keywords (list[str]): List of keywords that will trigger logging a command to GhostWriter
     """
 
     gw_api_key_graphql: str = ""
@@ -45,8 +47,10 @@ class Config:
     gw_url: str = ""
     operator: str | None = None
     termsync_config: Path = Path("config.yaml")
+    termsync_json_log_dir: str = "log_archive"
     termsync_listen_host: str = "127.0.0.1"
     termsync_listen_port: int = 8000
+    termsync_save_all_local: bool = False
     termsync_timeout_seconds: int = 10
 
     # TODO: Automatically add keywords "exported" by registered command parsers
@@ -76,7 +80,7 @@ class Config:
             logger.info(f"Logging config from: {config_filepath}")
 
             with open(config_filepath) as in_file:
-                for setting_name, value in (yaml.safe_load(in_file) or {}).items():
+                for setting_name, value in (safe_load(in_file) or {}).items():
                     if hasattr(self, setting_name):
                         setattr(self, setting_name, value)
                     else:
@@ -86,17 +90,19 @@ class Config:
 
         # Override settings with any matching environment variables
         for setting_name, value in self:
-            setting_name = setting_name.upper()
-
-            if new_value := os.getenv(setting_name):
-                # If the setting is a list or dictionary, parse the environment variable as a JSON object
-                if isinstance(value, list | dict):
-                    new_value = loads(new_value)
-
-                setattr(self, setting_name, new_value)
+            if new_value := os.getenv(setting_name.upper()):
+                # If an environment variable setting exists, parse the value as YAML in order to handle
+                # lists, dictionaries, ints, booleans, etc.
+                setattr(self, setting_name, safe_load(new_value))
 
         if not self.gw_api_key_graphql and not self.gw_api_key_rest:
-            raise Exception("No GhostWriter API key specified")
+            # Cannot log to GhostWriter without an API key; enable local log storage as a backup
+            self.termsync_save_all_local = True
+            logger.warning("No GhostWriter API key specified; activity will not be logged to GhostWriter!")
+            logger.info("Local logging enabled as a fallback")
+
+        if self.gw_oplog_id < 0:
+            raise ValueError("Oplog ID must be a positive integer")
 
         if self.gw_description_token not in self.termsync_keywords:
             self.termsync_keywords.append(self.gw_description_token)

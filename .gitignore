@@ -163,11 +163,13 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
-
-# Custom
+# Local VS Code configs
 .vscode
 *.code-workspace
 
+
+# Custom
+log_archive/
 config.yaml
 
 # Bash dependency downloaded to project repo directory (by default)

@@ -6,10 +6,17 @@ services:
     build:
       context: .
       dockerfile: ./Dockerfile
-    image: terminal_sync:latest
-    ports:
-      - 8000:8000
+    image: "terminal_sync:latest"
     restart: unless-stopped
+    ports:
+      - "8000:8000"
+    # environment:
+    #   - GW_URL=
+    #   - GW_OPLOG_ID=
+    #   - GW_API_KEY_GRAPHQL=
+    #   - GW_API_KEY_REST=
+    #   - OPERATOR=
     volumes:
       - ./config.yaml:/app/config.yaml
+      - ./log_archive:/app/log_archive
       - ./terminal_sync.log:/app/terminal_sync.log

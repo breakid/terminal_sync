@@ -6,9 +6,9 @@ labels: bug
 assignees: breakid
 ---
 
-This issue tracker is **ONLY** used for reporting bugs. Changes and feature requests should be submitted under the [Ideas](https://github.com/breakid/terminal_sync/discussions/categories/ideas) section of the **Discussion** tab.
+<!-- NOTE: This issue tracker is **ONLY** used for reporting bugs. Changes and feature requests should be submitted under the [Ideas](https://github.com/breakid/terminal_sync/discussions/categories/ideas) section of the **Discussion** tab.-->
 
-Please check [existing issues](https://github.com/breakid/terminal_sync/issues) before creating a new one.
+<!-- Please check [existing issues](https://github.com/breakid/terminal_sync/issues) before creating a new one. -->
 
 <!--- Provide a general summary of the issue in the Title above -->
 

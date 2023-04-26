@@ -4,7 +4,7 @@ terminal_sync is a standalone tool for logging Bash and PowerShell commands to [
 
 The terminal_sync server is intended to be run locally and therefore does not include authentication or encryption. Should you choose to run the server on a remote host, it is highly recommended that you run it on `localhost` and use an SSH forward tunnel to access it.
 
-Similarly, terminal_sync was (mostly) designed with a single user per instance in mind. The one exception is that if the `OPERATOR` environment variable is set within a client shell session, this value will override the `operator` setting on the server, thus allowing multiple users to share a terminal_sync server. That said, the server itself only supports a single API key / token per instance, so make sure all users with access to the server are authorized for that level of access to GhostWriter.
+Similarly, terminal_sync was (mostly) designed with a single user per instance in mind. The one exception is that if the `OPERATOR` environment variable is set within a client shell session, this value will override the operator setting on the server, thus allowing multiple users to share a terminal_sync server. That said, the server itself only supports a single API key / token per instance, so make sure all users with access to the server are authorized for that level of access to GhostWriter.
 
 For the purpose of this documentation, the terms "API key" and "token" are used interchangeably.
 
@@ -26,7 +26,7 @@ For the purpose of this documentation, the terms "API key" and "token" are used 
     1. Create a `config.yaml` file
 
         ```bash
-        copy src/terminal_sync/config_template.yaml config.yaml
+        cp src/terminal_sync/config_template.yaml config.yaml
         ```
 
     2. Edit `config.yaml` and provide appropriate values for: `gw_url`, `gw_oplog_id`, and at least one of `gw_api_key_graphql` or `gw_api_key_rest`
