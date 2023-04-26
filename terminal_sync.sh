@@ -24,7 +24,7 @@ TERMSYNC_TIMEOUT=10
 # NOTE: These installation steps are run automatically every time the script is invoked to make sure the necessary
 # dependencies are in place and haven't been removed since the last execution
 
-BASH_PREEXEC_PATH="~/bash-preexec.sh"
+BASH_PREEXEC_PATH=~/bash-preexec.sh
 
 # If bash-preexec.sh does not exist, warn the user about running scripts from the Internet,
 # if they accept the risk, download it
