@@ -51,7 +51,7 @@ class Config:
     termsync_listen_host: str = "127.0.0.1"
     termsync_listen_port: int = 8000
     termsync_save_all_local: bool = False
-    termsync_timeout_seconds: int = 10
+    termsync_timeout_seconds: int = 3
 
     # TODO: Automatically add keywords "exported" by registered command parsers
     # TODO: This list should only contain keywords that don't have an associated command parser

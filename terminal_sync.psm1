@@ -20,7 +20,7 @@ $global:TermSyncVerbosity = 4
 $global:TermSyncServer = "127.0.0.1:8000"
 
 # The number of seconds the client will wait for a response from the terminal_sync server
-$global:TimeoutSec = 10
+$global:TimeoutSec = 4
 
 
 # =============================================================================

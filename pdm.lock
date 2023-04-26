@@ -65,7 +65,6 @@ dependencies = [
     "pathspec>=0.9.0",
     "platformdirs>=2",
     "tomli>=1.1.0; python_version < \"3.11\"",
-    "typing-extensions>=3.10.0.0; python_version < \"3.10\"",
 ]
 
 [[package]]
@@ -280,7 +279,6 @@ requires_python = ">=3.7"
 summary = "The little ASGI library that shines."
 dependencies = [
     "anyio<5,>=3.4.0",
-    "typing-extensions>=3.10.0; python_version < \"3.10\"",
 ]
 
 [[package]]
@@ -334,7 +332,7 @@ dependencies = [
 [metadata]
 lock_version = "4.2"
 groups = ["default", "dev"]
-content_hash = "sha256:8a46f52a1160bf221c4a68c8f01e21ede4fbef34e20963300d30687a2ba98271"
+content_hash = "sha256:4a6866107fca8dd6ff0fe3f7523672bf770fa4451bd75ccffe2a5e35f4823d8f"
 
 [metadata.files]
 "aiohttp 3.8.4" = [

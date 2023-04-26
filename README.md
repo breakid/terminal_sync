@@ -74,12 +74,12 @@ For the purpose of this documentation, the terms "API key" and "token" are used 
     - Bash
 
         1. Edit the **Configuration Settings** section at the top of `terminal_sync.sh`
-        2. Run `chmod +x ./terminal_sync.sh && ./terminal_sync.sh`
+        2. Run `source ./terminal_sync.sh`
             - **Note**: This must be done in each new bash session
             - You will be prompted to install any missing dependencies
             - On first run, you will also be prompted whether you want to install the hooks permanently
 
-        - If you want to install the hooks later, just append `source <PATH_TO>/terminal_sync.sh` to your `~/.bashrc` file.
+        - If you want to install the hooks later, just append `source '<PATH_TO>/terminal_sync.sh'` to your `~/.bashrc` file.
 
     - PowerShell
 
@@ -139,7 +139,7 @@ To permanently disable terminal_sync, delete or comment out the line in `~/.bash
 
 Both the Bash script and PowerShell module contain a configuration setting that allows you to set the default console output. If you want to (temporarily) change this for a session, use one of the following commands.
 
-In Bash, run `set_termsync_versbosity`; this will print a list of display settings and prompt you for a number. Simply enter the number that matches your preferred setting.
+In Bash, run `Set-TermSyncVersbosity`; this will print a list of display settings and prompt you for a number. Simply enter the number that matches your preferred setting.
 
 In PowerShell, type `Set-TermSyncVerbosity`, followed by a space, then press **TAB** to cycle through the available options. Press **Enter** to select your preferred setting.
 
@@ -165,6 +165,8 @@ Development and testing were performed using the following configurations. If yo
   - Docker Compose v2.17.2
   - PowerShell 5.1.22621.963
   - Python 3.11
+- Debian 11 (terminal_sync server and Bash hooks)
+  - Python 3.11.3
 - Debian 11 (Bash hooks)
   - Python 3.9.2
 - GhostWriter running over HTTPS

@@ -14,7 +14,7 @@ TERMSYNC_LOGGING=1
 TERMSYNC_VERBOSITY=4
 
 # The number of seconds the client will wait for a response from the terminal_sync server
-TERMSYNC_TIMEOUT=10
+TERMSYNC_TIMEOUT=4
 
 
 # =============================================================================

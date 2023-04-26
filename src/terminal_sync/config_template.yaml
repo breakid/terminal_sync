@@ -45,4 +45,4 @@ termsync_keywords:
 #termsync_save_all_local: no
 
 # The number of seconds the server will wait for a response from GhostWriter
-#termsync_timeout_seconds: 10
+#termsync_timeout_seconds: 3

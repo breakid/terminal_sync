@@ -2,10 +2,7 @@
 
 # Standard Libraries
 import logging
-
-# from asyncio.exceptions import TimeoutError
 from collections.abc import Callable
-from importlib import metadata
 
 # Third-party Libraries
 import aiohttp
@@ -15,6 +12,7 @@ from gql.client import DocumentNode
 from gql.transport.aiohttp import AIOHTTPTransport
 
 # Internal Libraries
+from terminal_sync import __version__ as termsync_version
 from terminal_sync.log_entry import Entry
 
 logger = logging.getLogger("terminal_sync")
@@ -113,7 +111,7 @@ class GhostWriterClient:
         self.base_url: str = url.rstrip("/")
 
         self.headers: dict[str, str] = {
-            "User-Agent": f"terminal_sync/{metadata.version('terminal_sync')}",
+            "User-Agent": f"terminal_sync/{termsync_version}",
             "Authorization": f"Bearer {graphql_api_key}" if graphql_api_key else f"Api-Key {rest_api_key}",
             "Content-Type": "application/json",
         }
@@ -123,9 +121,15 @@ class GhostWriterClient:
         self.update_log: Callable = self._update_entry_graphql
 
         if graphql_api_key:
+            logger.info("Using the GraphQL API")
             url = f"{self.base_url}/v1/graphql"
-            self._transport: AIOHTTPTransport = AIOHTTPTransport(url=url, timeout=timeout_seconds, headers=self.headers)
+            # WORKAROUND: When running Docker on a Windows host, the application will always hang waiting for the SSL
+            # connection to terminate. The ssl_close_timeout is therefore set to 0 to avoid a negative user experience
+            self._transport: AIOHTTPTransport = AIOHTTPTransport(
+                url=url, headers=self.headers, ssl_close_timeout=0, timeout=timeout_seconds
+            )
         else:
+            logger.info("Using the REST API")
             # Important: If you leave off the trailing "/" on oplog/api/entries/ then this POST will return "200 OK"
             # without actually doing anything
             self.rest_url: str = f"{self.base_url}/oplog/api/entries/"

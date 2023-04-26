@@ -271,7 +271,7 @@ async def post_exec(msg: Message) -> str:
 async def app_shutdown() -> None:
     """Export a GhostWriter CSV file on server shutdown"""
     try:
-        csv_filepath: Path = export_csv(Path(config.termsync_json_log_dir))
+        csv_filepath: Path = export_csv(Path(config.termsync_json_log_dir), Path(config.termsync_json_log_dir))
         logger.info(f"Exported cached logs to: {csv_filepath}")
     except Exception as e:
         logger.exception(e)

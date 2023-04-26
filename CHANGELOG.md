@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.2.0] - 2023-04-26
+
+### Added
+
+- Added a new feature to save failed (or optionally all) logs locally (as JSON files)
+- Created a script / library to export the JSON files to a GhostWriter CSV
+  - Configured the server to automatically export a CSV file on shutdown (though stopping a Docker container doesn't seem to trigger it)
+
+### Fixed
+
+- Fixed several syntax errors in the Bash install / hook script that prevented successful installation
+
+### Changed
+
+- Updated Dockerfile to export requirements.txt (to ensure platform compatibility) and install using pip rather than PDM (to reduce runtime complexity)
+- Increased minimum Python version to 3.10 due to use of PEP-604 style type hinting syntax
+- Reduced default timeout values as the previous ones were painfully long if something failed and would negatively impact user experience
+
 ## [v0.1.0] - 2023-04-21
 
 Initial release
