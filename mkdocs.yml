@@ -1,0 +1,15 @@
+site_name: terminal_sync
+site_url: https://breakid.github.io/terminal_sync/
+theme: readthedocs
+nav:
+  - Home: index.md
+  - Getting Started:
+      - Quickstart: quickstart.md
+      - Setup: setup.md
+      - Usage: usage.md
+      - Updating: updating.md
+      - Troubleshooting: troubleshooting.md
+  - Development:
+      - Architecture: architecture.md
+      - Developer Guide: developer_guide.md
+      - Style Guide: style_guide.md

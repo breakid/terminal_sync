@@ -20,6 +20,7 @@ gw_api_key_graphql:
 gw_api_key_rest:
 
 # Anything appearing after this token in a shell command will be logged to the entry's Description field
+# It must begin with a "#" so that Bash and PowerShell will interpret it and everything that follows as a comment
 # Note: Including this token will force any command where it is provided to be logged
 #gw_description_token: "#desc"
 

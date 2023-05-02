@@ -5,6 +5,9 @@
 # The name / identifier of the user creating the log entries
 $env:OPERATOR = ""
 
+# The IP and port where the terminal_sync server is running
+$global:TermSyncServer = "127.0.0.1:8000"
+
 # Enable / disable terminal_sync logging at runtime
 $global:TermSyncLogging = $true
 
@@ -15,9 +18,6 @@ $global:TermSyncLogging = $true
 #   3 (IgnoreTermSyncConnError): Only errors contacting the terminal_sync server will be suppressed
 #   4 (All): All terminal_sync output will be displayed
 $global:TermSyncVerbosity = 4
-
-# The IP and port where the terminal_sync server is running
-$global:TermSyncServer = "127.0.0.1:8000"
 
 # The number of seconds the client will wait for a response from the terminal_sync server
 $global:TimeoutSec = 4

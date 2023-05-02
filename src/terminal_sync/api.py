@@ -6,6 +6,7 @@ import logging
 import sys
 from asyncio.exceptions import TimeoutError
 from datetime import datetime
+from os import getenv
 from os import makedirs
 from pathlib import Path
 from re import match
@@ -60,7 +61,7 @@ try:
 
     # If no API key specified, skip creating the client
     # This allows terminal_sync to be used for local logging without a GhostWriter instance
-    if config.gw_api_key_graphql or config.gw_api_key_rest:
+    if config.gw_url and (config.gw_api_key_graphql or config.gw_api_key_rest):
         # Create a GhostWriter client using config settings
         gw_client = GhostWriterClient(
             url=config.gw_url,
@@ -93,7 +94,7 @@ class Message(BaseModel):
     operator: str | None = config.operator
     oplog_id: int = config.gw_oplog_id
     output: str | None = None
-    source_host: str | None = None
+    source_host: str | None = getenv("SRC_HOST")
     start_time: datetime = datetime.utcnow()
     end_time: datetime = datetime.utcnow()
     uuid: str = ""
@@ -171,6 +172,12 @@ async def log_command(msg: Message) -> tuple[Entry, str]:
                 return (entry, f"[+] Logged to JSON file with UUID: {msg.uuid}")
 
             if entry.gw_id is None:
+                # Save the entry so we can update it when the command completes
+                # Note: If we don't save the entry here, it won't be saved at all if an exception occurs
+                #       This can result in duplicate JSON objects being created for the same log
+                #       Luckily, since we're saving a reference to an object, the gw_id of the saved entry will be
+                #       updated as well, if the creation is successful
+                log_entries[msg.uuid] = entry
                 entry.gw_id = await gw_client.create_log(entry)
 
                 if entry.gw_id:
@@ -216,17 +223,12 @@ async def pre_exec(msg: Message) -> str:
     Returns:
         str: The message to display to the user
     """
-    global log_entries
-
     logger.debug(f"POST /commands/: {msg}")
 
     entry: Entry
     response: str
 
     entry, response = await log_command(msg)
-
-    # Save the entry so we can update it when the command completes
-    log_entries[msg.uuid] = entry
 
     return response
 
@@ -261,6 +263,8 @@ async def post_exec(msg: Message) -> str:
     entry, response = await log_command(msg)
 
     # Remove the entry from the buffer so the buffer doesn't get huge
+    # Note: The removal is done here, rather than in log_command() in case no previous entry existed and the creation
+    #       flow was followed
     if log_entries.get(msg.uuid):
         del log_entries[msg.uuid]
 

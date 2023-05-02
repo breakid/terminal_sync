@@ -11,6 +11,13 @@ TERMSYNC_SERVER="127.0.0.1:8000"
 # Whether terminal_sync logging is enabled; any value greater than 0 means enabled
 TERMSYNC_LOGGING=1
 
+# Controls the verbosity of the terminal_sync console output
+#   0 (None): No terminal_sync output will be displayed
+#   1 (ExecOnly): Only the executed command and timestamps will be displayed
+#   2 (SuccessOnly): terminal_sync will display a message on logging success
+#   3 (IgnoreTermSyncConnError): Only errors contacting the terminal_sync server will be suppressed
+#   4 (All): All terminal_sync output will be displayed
+#   5 (Debug): Additional debugging information will be displayed
 TERMSYNC_VERBOSITY=4
 
 # The number of seconds the client will wait for a response from the terminal_sync server
@@ -115,8 +122,6 @@ function Disable-TermSync {
 }
 
 function Set-TermSyncVersbosity() {
-    # num_levels=${#DISPLAY_LEVELS[@]}
-
     echo "Display Levels:"
     echo "---------------"
 
@@ -188,8 +193,11 @@ function create_log() {
         --arg uuid "${CMD_UUID}" \
         --arg command "${command}" \
         --arg start_time "${CMD_START_TIME}" \
+        --arg source_host "${SRC_HOST}" \
         --arg comments "${COMMENT}" \
-        '{"uuid": $uuid, "command": $command, "start_time": $start_time, "comments": $comments}'\
+        --arg operator "${OPERATOR}" \
+        '{"uuid": $uuid, "command": $command, "start_time": $start_time,
+        "source_host": $source_host, "comments": $comments}, "operator": $operator}'\
     )"
 
     if [[ $TERMSYNC_VERBOSITY -gt $DISPLAY_ALL ]]; then
@@ -225,10 +233,12 @@ function update_log() {
         --arg command "${command}" \
         --arg start_time "${CMD_START_TIME}" \
         --arg end_time "${end_time}" \
+        --arg source_host "${SRC_HOST}" \
         --arg output "${output}" \
         --arg comments "${COMMENT}" \
+        --arg operator "${OPERATOR}" \
         '{"uuid": $uuid, "command": $command, "start_time": $start_time, "end_time": $end_time,
-        "output": $output, "comments": $comments}'\
+        "source_host": $source_host, "output": $output, "comments": $comments, "operator": $operator}'\
     )"
 
     if [[ $TERMSYNC_VERBOSITY -gt $DISPLAY_ALL ]]; then

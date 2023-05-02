@@ -95,14 +95,17 @@ class Config:
                 # lists, dictionaries, ints, booleans, etc.
                 setattr(self, setting_name, safe_load(new_value))
 
-        if not self.gw_api_key_graphql and not self.gw_api_key_rest:
-            # Cannot log to GhostWriter without an API key; enable local log storage as a backup
+        if not self.gw_url or (not self.gw_api_key_graphql and not self.gw_api_key_rest):
+            # Cannot log to GhostWriter without a URL or API key; enable local log storage as a backup
             self.termsync_save_all_local = True
             logger.warning("No GhostWriter API key specified; activity will not be logged to GhostWriter!")
             logger.info("Local logging enabled as a fallback")
 
         if self.gw_oplog_id < 0:
             raise ValueError("Oplog ID must be a positive integer")
+
+        if not self.gw_description_token.startswith("#"):
+            raise ValueError("gw_description_token must start with a '#'")
 
         if self.gw_description_token not in self.termsync_keywords:
             self.termsync_keywords.append(self.gw_description_token)

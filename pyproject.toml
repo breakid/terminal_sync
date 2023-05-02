@@ -4,7 +4,7 @@ build-backend = "pdm.backend"
 
 [project]
 name = "terminal_sync"
-version = "0.2.0"
+version = "0.3.0"
 description = "A standalone tool for logging shell commands to GhostWriter automatically"
 authors = [{ name = "breakid" }]
 license = { text = "GPL-3.0-or-later" }
@@ -60,9 +60,12 @@ dev = [
   "pre-commit>=3.2.2",
   "types-PyYAML>=6.0.12.9",
 ]
+docs = ["mkdocs>=1.4.2"]
 
 [tool.pdm.scripts]
 check = "pre-commit run --all-files"
 code = "code terminal_sync.code-workspace"
-serve = "uvicorn terminal_sync.api:app"
+# Run the documentation server on 8080 so it doesn't interfere with the terminal_sync server
+docs = "mkdocs serve --dev-addr 127.0.0.1:8080"
+serve = "python -m terminal_sync"
 test = "pytest"
