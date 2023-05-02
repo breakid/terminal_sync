@@ -6,7 +6,7 @@ Please start by reviewing our [Code of Conduct](/CODE_OF_CONDUCT.md) to ensure o
 
 ## Questions
 
-If you have a question, please check the [documentation](/README.md) and search previous [Q&As](https://github.com/breakid/terminal_sync/discussions/categories/q-a) first. If you cannot find an answer, please post your question [here](https://github.com/breakid/terminal_sync/discussions/new?category=q-a) (i.e., create a new discussion under the **Q&A** category of the **Discussions** tab).
+If you have a question, please check the [documentation](https://breakid.github.io/terminal_sync/) and search previous [Q&As](https://github.com/breakid/terminal_sync/discussions/categories/q-a) first. If you cannot find an answer, please post your question [here](https://github.com/breakid/terminal_sync/discussions/new?category=q-a) (i.e., create a new discussion under the **Q&A** category of the **Discussions** tab).
 
 The following is a set of guidelines for contributing to Ghostwriter and its packages, which are hosted in the GhostManager Organization on GitHub. These are mostly guidelines, not rules. Use your best judgment, and feel free to propose changes to this document in a pull request.
 
@@ -47,7 +47,7 @@ The process described here has several goals:
 
 Please follow these steps to have your contribution considered by the maintainers:
 
-1. Review the [Developer Documentation](#) (coming soon) and follow the [style guidance](#) (coming soon)
+1. Review the [Developer Guide](https://breakid.github.io/terminal_sync/developer_guide/) and follow the [Style Guide](https://breakid.github.io/terminal_sync/style_guide/)
 2. Follow all instructions in the pull request template (coming soon)
 3. After you submit your pull request, verify that all [status checks](https://help.github.com/articles/about-status-checks/) are passing <details><summary>What if the status checks are failing?</summary>If a status check is failing, and you believe that the failure is unrelated to your change, please leave a comment on the pull request explaining why you believe the failure is unrelated. A maintainer will re-run the status check for you. If we conclude that the failure was a false positive, then we will open an issue to track that problem with our status check suite.</details>
 
