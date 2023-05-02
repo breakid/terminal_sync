@@ -197,7 +197,7 @@ function create_log() {
         --arg comments "${COMMENT}" \
         --arg operator "${OPERATOR}" \
         '{"uuid": $uuid, "command": $command, "start_time": $start_time,
-        "source_host": $source_host, "comments": $comments}, "operator": $operator}'\
+        "source_host": $source_host, "comments": $comments, "operator": $operator}'\
     )"
 
     if [[ $TERMSYNC_VERBOSITY -gt $DISPLAY_ALL ]]; then
