@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://breakid.github.io/terminal_sync/troubleshooting/" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Troubleshooting - terminal_sync</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Troubleshooting";
+        var mkdocs_page_input_path = "troubleshooting.md";
+        var mkdocs_page_url = "/terminal_sync/troubleshooting/";
+      </script>
+    
+    <script src="../js/jquery-3.6.0.min.js" defer></script>
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> terminal_sync
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="..">Home</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../quickstart/">Quickstart</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../setup/">Setup</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../usage/">Usage</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../updating/">Updating</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="./">Troubleshooting</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#test-environments">Test Environments</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#server-problems">Server Problems</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#no-ghostwriter-api-key-specified">No GhostWriter API key specified</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#a-configyaml-or-terminal_synclog-directory-gets-created">A config.yaml or terminal_sync.log directory gets created</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#client-problems">Client Problems</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#cannot-connect-to-host-sslfalse-getaddrinfo-failed">Cannot connect to host  ssl:False [getaddrinfo failed]</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#cannot-connect-to-host-sslfalse-the-remote-computer-refused-the-network-connection">Cannot connect to host  ssl:False [The remote computer refused the network connection]</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#authentication-hook-unauthorized-this-request">Authentication hook unauthorized this request</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#check-constraint-of-an-insertupdate-permission-has-failed">check constraint of an insert/update permission has failed</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#authentication-credentials-were-not-provided">Authentication credentials were not provided</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#404-messagenot-found-urlurlhttpsv1graphql">404, message='Not Found', url=URL('https:///v1/graphql')</a>
+    </li>
+        </ul>
+    </li>
+    </ul>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Development</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/">Architecture</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../developer_guide/">Developer Guide</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../style_guide/">Style Guide</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">terminal_sync</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" alt="Docs"></a> &raquo;</li>
+          <li>Getting Started &raquo;</li>
+      <li>Troubleshooting</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="troubleshooting">Troubleshooting</h1>
+<p>The following is a list of potential errors identified during testing and recommended methods for resolving them.</p>
+<hr />
+<h2 id="test-environments">Test Environments</h2>
+<p>Development and testing were performed using the configurations listed below. If you encounter any problems attributable to a different environment, please <a href="https://github.com/breakid/terminal_sync/issues">submit a GitHub issue</a>; be sure to include a detailed description of the problem and relevant information about your environment. We can't fix what we can't replicate.</p>
+<ul>
+<li>Windows 11 (terminal_sync server and PowerShell hooks)<ul>
+<li>Docker 20.10.24, build 297e128</li>
+<li>Docker Compose v2.17.2</li>
+<li>PowerShell 5.1.22621.963</li>
+<li>Python 3.11</li>
+</ul>
+</li>
+<li>Debian 11 (terminal_sync server and Bash hooks)<ul>
+<li>Docker version 23.0.4, build f480fb1</li>
+<li>Docker Compose version v2.17.2</li>
+<li>Python 3.11.3</li>
+</ul>
+</li>
+<li>Debian 11 (Bash hooks)<ul>
+<li>Python 3.9.2</li>
+</ul>
+</li>
+<li>GhostWriter running over HTTPS</li>
+</ul>
+<hr />
+<h2 id="server-problems">Server Problems</h2>
+<h3 id="no-ghostwriter-api-key-specified">No GhostWriter API key specified</h3>
+<p><strong>Problem</strong>: Neither a GraphQL nor a REST API key were provided</p>
+<p><strong>Solution</strong>: Make sure to enter a valid API key for at least one of these settings in the <code>config.yaml</code> file or set the <code>GW_API_KEY_GRAPHQL</code> or <code>GW_API_KEY_REST</code> environment variables.</p>
+<h3 id="a-configyaml-or-terminal_synclog-directory-gets-created">A <code>config.yaml</code> or <code>terminal_sync.log</code> directory gets created</h3>
+<p><strong>Problem</strong>: You didn't create the necessary file(s) before running the server with Docker Compose</p>
+<p><strong>Solution</strong>:</p>
+<ol>
+<li>Stop the server (<code>docker-compose down</code>)</li>
+<li>Delete the <code>config.yaml</code> and/or <code>terminal_sync.log</code> directory</li>
+<li>Initalize the <code>config.yaml</code> and/or <code>terminal_sync.log</code> files (see <a href="../setup/#2-configure-the-server">Setup: Configure the Server</a>)</li>
+<li>Restart the server (<code>docker-compose up -d</code>)</li>
+</ol>
+<hr />
+<h2 id="client-problems">Client Problems</h2>
+<h3 id="cannot-connect-to-host-sslfalse-getaddrinfo-failed">Cannot connect to host <GHOSTWRITER_SERVER> ssl:False [getaddrinfo failed]</h3>
+<p><strong>Problem</strong>: terminal_sync is unable to resolve the hostname of your GhostWriter server</p>
+<p><strong>Solution</strong>:</p>
+<ol>
+<li>Verify the <code>gw_url</code> setting contains the correct hostname</li>
+<li>Verify connectivity to your GhostWriter server (e.g., check any VPNs, SSH tunnels, etc.)</li>
+<li>Check your DNS settings</li>
+</ol>
+<hr />
+<h3 id="cannot-connect-to-host-sslfalse-the-remote-computer-refused-the-network-connection">Cannot connect to host <GHOSTWRITER_SERVER> ssl:False [The remote computer refused the network connection]</h3>
+<p><strong>Problem</strong>: terminal_sync can reach the GhostWriter server, but the port is blocked</p>
+<p><strong>Solution</strong>:</p>
+<ol>
+<li>Verify the <code>gw_url</code> setting contains any applicable port numbers</li>
+<li>Check the firewall settings on your GhostWriter server</li>
+</ol>
+<hr />
+<h3 id="authentication-hook-unauthorized-this-request">Authentication hook unauthorized this request</h3>
+<p><strong>Problem</strong>: Your GraphQL token is invalid</p>
+<p><strong>Solution</strong>:</p>
+<ol>
+<li>Verify your token hasn't expired</li>
+<li>Verify the token you specified is correct and complete</li>
+<li>Generate a new GraphQL token key</li>
+</ol>
+<hr />
+<h3 id="check-constraint-of-an-insertupdate-permission-has-failed">check constraint of an insert/update permission has failed</h3>
+<p><strong>Problem</strong>: You're using the GraphQL API, and either the Oplog ID you're trying to write to doesn't exist, or you don't have permission to write to it</p>
+<p><strong>Solution</strong>:</p>
+<ol>
+<li>Verify an Oplog with the specified ID exists</li>
+<li>Verify your user account is assigned to the project to which the specified Oplog belongs</li>
+</ol>
+<hr />
+<h3 id="authentication-credentials-were-not-provided">Authentication credentials were not provided</h3>
+<p><strong>Problem</strong>: You're using the REST API and provided an API key, but your <code>gw_url</code> is using <code>http://</code> rather than <code>https://</code></p>
+<p><strong>Solution</strong>: Modify your <code>gw_url</code> to use <code>https://</code></p>
+<hr />
+<h3 id="404-messagenot-found-urlurlhttpsv1graphql">404, message='Not Found', url=URL('https://<GHOSTWRITER_SERVER>/v1/graphql')</h3>
+<p><strong>Problem</strong>: While there are likely many causes for this generic issue, this was observed when using the GraphQL API and a <code>gw_url</code> containing <code>http://</code> rather than <code>https://</code></p>
+<p><strong>Solution</strong>: Modify your <code>gw_url</code> to use <code>https://</code></p>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../updating/" class="btn btn-neutral float-left" title="Updating"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../architecture/" class="btn btn-neutral float-right" title="Architecture">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../updating/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../architecture/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme_extra.js" defer></script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>

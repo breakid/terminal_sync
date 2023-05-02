@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="description" content="None" /><link rel="canonical" href="https://breakid.github.io/terminal_sync/" />
+      <link rel="shortcut icon" href="img/favicon.ico" />
+    <title>terminal_sync</title>
+    <link rel="stylesheet" href="css/theme.css" />
+    <link rel="stylesheet" href="css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Home";
+        var mkdocs_page_input_path = "index.md";
+        var mkdocs_page_url = "/terminal_sync/";
+      </script>
+    
+    <script src="js/jquery-3.6.0.min.js" defer></script>
+    <!--[if lt IE 9]>
+      <script src="js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="." class="icon icon-home"> terminal_sync
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="./search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+                <li class="toctree-l1 current"><a class="reference internal current" href=".">Home</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#features">Features</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#known-limitations">Known Limitations</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#bash-limitations">Bash Limitations</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#local-vs-remote-usage">Local vs Remote Usage</a>
+    </li>
+    </ul>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="quickstart/">Quickstart</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="setup/">Setup</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="usage/">Usage</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="updating/">Updating</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="troubleshooting/">Troubleshooting</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Development</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="architecture/">Architecture</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="developer_guide/">Developer Guide</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="style_guide/">Style Guide</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href=".">terminal_sync</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="." class="icon icon-home" alt="Docs"></a> &raquo;</li>
+      <li>Home</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="terminal_sync">terminal_sync</h1>
+<h2 id="overview">Overview</h2>
+<p>terminal_sync is a standalone tool for logging Bash and PowerShell commands to <a href="https://github.com/GhostManager/Ghostwriter">GhostWriter</a> automatically. The provided Bash script and PowerShell module register pre-exec and post-exec hooks that capture and send information about executed commands to the terminal_sync server for additional processing and enrichment. Once properly configured, any commands that meet the configured logging criteria (e.g., contain a specific keyword) are sent to GhostWriter.</p>
+<hr />
+<h2 id="features">Features</h2>
+<ul>
+<li>
+<p><strong>Automatic Shell Logging</strong></p>
+<ul>
+<li>Logs Bash and PowerShell commands directly to GhostWriter based on a configurable keyword list</li>
+</ul>
+</li>
+<li>
+<p><strong>Export Log Entries to CSV</strong></p>
+<ul>
+<li>Saves failed (or optionally all) command log entries to JSON files that can be <a href="usage/#export-logs-to-ghostwriter-csv">converted to CSV</a> and imported into GhostWriter</li>
+<li>Supports off-line logging</li>
+</ul>
+</li>
+<li>
+<p><strong>Command Timestamps</strong></p>
+<ul>
+<li>Displays execution and completion timestamps for each command</li>
+<li>Useful reference for commands not configured to auto-log</li>
+</ul>
+</li>
+<li>
+<p><strong>In-line Descriptions</strong></p>
+<ul>
+<li>Supports <a href="usage/#add-a-description">adding a description</a> to the end of a command</li>
+<li>Allows users to <a href="usage/#log-ad-hoc-commands">force an individual command to be logged</a></li>
+<li>Maintains flow by keeping users at the command-line</li>
+</ul>
+</li>
+<li>
+<p><strong>Simple Configuration</strong></p>
+<ul>
+<li>Easy <a href="setup/#2-configure-the-server">setup and configuration using YAML config file and/or environment variables</a></li>
+</ul>
+</li>
+<li>
+<p><strong>Management Commands</strong></p>
+<ul>
+<li>Ability to <a href="usage/#enable--disable-terminal_sync">enable/disable terminal_sync</a> or <a href="usage/#adjust-console-output-at-runtime">change the verbosity</a> for an individual session</li>
+</ul>
+</li>
+</ul>
+<hr />
+<h2 id="known-limitations">Known Limitations</h2>
+<ul>
+<li>Background jobs (i.e., Bash commands ending with <code>&amp;</code> and PowerShell <code>Start-Job</code> commands) will always be reported as successful since the post-exec hook runs when the prompt returns, which happens before the command completes.</li>
+</ul>
+<h3 id="bash-limitations">Bash Limitations</h3>
+<ul>
+<li>Compound commands (i.e., multiple commands joined by <code>&amp;&amp;</code>) run in the background will not be logged<ul>
+<li>These commands trigger the <code>precmd</code> (i.e., post-exec) hook but not the <code>preexec</code> hook; however, the current post-exec implementation relies on a variable set in the pre-exec hook to prevent logging duplicate entries when a user submits an empty line</li>
+</ul>
+</li>
+</ul>
+<hr />
+<h2 id="local-vs-remote-usage">Local vs Remote Usage</h2>
+<p>The terminal_sync server is intended to be run locally and therefore does not include authentication or encryption. Should you choose to run the server on a remote host, it is highly recommended that you run it on <code>localhost</code> and use an SSH forward tunnel, or similar mechanism, to access it.</p>
+<p>Similarly, terminal_sync was (mostly) designed with a single user per instance in mind. The one exception is that if the <code>OPERATOR</code> environment variable is set within a client shell session, this value will override the operator setting on the server, thus allowing multiple users to share a terminal_sync server. That said, the server itself only supports a single API key / token per instance, so make sure all users with access to the server are authorized for that level of access to GhostWriter.</p>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="quickstart/" class="btn btn-neutral float-right" title="Quickstart">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+    
+      <span><a href="quickstart/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script>var base_url = '.';</script>
+    <script src="js/theme_extra.js" defer></script>
+    <script src="js/theme.js" defer></script>
+      <script src="search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>
+
+<!--
+MkDocs version : 1.4.2
+Build Date UTC : 2023-05-02 15:59:10.268375+00:00
+-->

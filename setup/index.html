@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://breakid.github.io/terminal_sync/setup/" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Setup - terminal_sync</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Setup";
+        var mkdocs_page_input_path = "setup.md";
+        var mkdocs_page_url = "/terminal_sync/setup/";
+      </script>
+    
+    <script src="../js/jquery-3.6.0.min.js" defer></script>
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> terminal_sync
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="..">Home</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../quickstart/">Quickstart</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="./">Setup</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#introduction">Introduction</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#1-get-the-code">1. Get the Code</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#2-configure-the-server">2. Configure the Server</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#3-run-the-server">3. Run the Server</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#docker">Docker</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#pdm">PDM</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#4-setup-terminal-hooks">4. Setup Terminal Hooks</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#bash">Bash</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#powershell">PowerShell</a>
+    </li>
+        </ul>
+    </li>
+    </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../usage/">Usage</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../updating/">Updating</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../troubleshooting/">Troubleshooting</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Development</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/">Architecture</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../developer_guide/">Developer Guide</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../style_guide/">Style Guide</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">terminal_sync</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" alt="Docs"></a> &raquo;</li>
+          <li>Getting Started &raquo;</li>
+      <li>Setup</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="setup">Setup</h1>
+<h2 id="introduction">Introduction</h2>
+<p>The following is a high-level overview of the steps required to setup terminal_sync. Additional details are provided in the sections below.</p>
+<ol>
+<li><a href="#1-get-the-code">Get the Code</a></li>
+<li><a href="#2-configure-the-server">Configure the Server</a></li>
+<li><a href="#3-run-the-server">Run the Server</a><ul>
+<li><a href="#docker">Docker</a></li>
+<li><a href="#pdm">PDM</a></li>
+</ul>
+</li>
+<li><a href="#4-setup-terminal-hooks">Setup Terminal Hooks</a><ul>
+<li><a href="#bash">Bash</a></li>
+<li><a href="#powershell">PowerShell</a></li>
+</ul>
+</li>
+</ol>
+<p>If you encounter problems, please refer to the <a href="../troubleshooting/">Troubleshooting</a> page.</p>
+<p><strong>Prerequisites</strong>: These instructions assume you have either Python 3.10+ and pip or Docker and Docker Compose installed.</p>
+<hr />
+<h2 id="1-get-the-code">1. Get the Code</h2>
+<p>Use <code>git</code> to clone this repo, or download and extract a zip archive of the files.</p>
+<pre><code class="language-bash">git clone https://github.com/breakid/terminal_sync
+cd terminal_sync
+</code></pre>
+<p>All subsequent instructions are provided from the context of the root project directory.</p>
+<hr />
+<h2 id="2-configure-the-server">2. Configure the Server</h2>
+<p>The server can be configured using a YAML config file, environment variables, or a combination thereof, with environment variables overriding config file values. By default, terminal_sync will look for <code>config.yaml</code> in the current working directory (relative to where you run the server). You may use the <code>TERMSYNC_CONFIG</code> environment variable to specify an alternate config file path.</p>
+<p>An example configuration file, <code>config_template.yaml</code>, is provided and contains comments that explain the purpose of each setting. To create a new config file, we recommend that you copy this template and edit the copy to meet your needs.</p>
+<pre><code class="language-bash">cp config_template.yaml config.yaml
+</code></pre>
+<p>Environment variables match the upper-case version (on case-sensitive systems) of the setting name found in the config file. For instance, the config file settings <code>gw_url</code> and <code>gw_oplog_id</code> become the environment variables <code>GW_URL</code> and <code>GW_OPLOG_ID</code>. The values are parsed as YAML, so all options found in the config file are supported, including complex structures such as lists and dictionaries.</p>
+<p>The server will automatically load any environment variables defined in a <code>.env</code> file.</p>
+<p>At a minimum, the <code>gw_url</code>, <code>gw_oplog_id</code>, and at least one of <code>gw_api_key_graphql</code> or <code>gw_api_key_rest</code> must be configured for terminal_sync to log to GhostWriter. If both API keys are set, terminal_sync will use GraphQL by default.</p>
+<p><strong>Note</strong>: To allow terminal_sync to be used off-line or independent of GhostWriter, the server will display a warning but <em><strong>start successfully</strong></em> even if these values are not provided. In this case, local logging will be enabled by default.</p>
+<hr />
+<h2 id="3-run-the-server">3. Run the Server</h2>
+<p>The server can be run as a Docker container or using <a href="https://pdm.fming.dev/latest/">PDM</a>.</p>
+<h3 id="docker">Docker</h3>
+<p>While there is not currently a pre-built image, a <code>Dockerfile</code> and <code>docker-compose.yaml</code> config are provided to simplify the build process. The default Compose config assumes:</p>
+<ol>
+<li>You created a <code>config.yaml</code> file in the previous step</li>
+<li>You have a <code>terminal_sync.log</code> file in the root project directory<ul>
+<li>This will be bind mounted into the container to persist application logs</li>
+<li>Use <code>touch terminal_sync.log</code> in Bash or <code>$null &gt; terminal_sync.log</code> in PowerShell to initialize this file</li>
+</ul>
+</li>
+</ol>
+<p>If you prefer to use environment variables rather than a config file, uncomment the <code>environment</code> section, fill in the appropriate values, and comment out or remove the <code>config.yaml</code> volume entry.</p>
+<p><strong>Note</strong>: If the <code>config.yaml</code> or <code>terminal_sync.log</code> files do not exist, Compose will create an empty directory for each missing source path. If you choose not to use these volumes, comment out or remove them from the Compose config.</p>
+<p>Once you have made any desired modifications to the Compose config, use the following command to start the server, optionally in detached mode (<code>-d</code>). On first run, Docker Compose should automatically build a local copy of the image, which will be used for subsequent executions.</p>
+<pre><code class="language-bash">docker-compose up -d
+</code></pre>
+<p>If you need to rebuild the image, such as after making or pulling changes to the code, add the <code>--build</code> flag to the command.</p>
+<pre><code class="language-bash">docker-compose up -d --build
+</code></pre>
+<p>When running in detached mode, you won't see any output from the container. Use the following command to view the logs; this is especially useful for troubleshooting.</p>
+<pre><code class="language-bash">docker-compose logs
+</code></pre>
+<p>If the build fails, you may need to build the image manually using Docker.</p>
+<pre><code class="language-bash">docker build --network=host --tag=terminal_sync:latest .
+</code></pre>
+<p>To stop the server, run the following:</p>
+<pre><code class="language-bash">docker-compose down
+</code></pre>
+<h3 id="pdm">PDM</h3>
+<p>If you have Python 3.10 or later, you can run the server using PDM.</p>
+<pre><code class="language-bash"># Install PDM
+pip install pdm
+
+# Use PDM to install the production dependencies and terminal_sync package
+pdm install --prod
+
+# Use the PDM 'serve' script to run the application with uvicorn
+# Note: This will run the server in the foreground, occupying your terminal
+pdm serve
+</code></pre>
+<p>To stop the server, press <code>CTRL+C</code>. If that doesn't work, kill the <code>uvicorn</code> process manually.</p>
+<hr />
+<h2 id="4-setup-terminal-hooks">4. Setup Terminal Hooks</h2>
+<h3 id="bash">Bash</h3>
+<ol>
+<li>Review and optionally edit the <strong>Configuration Settings</strong> section at the top of <code>terminal_sync.sh</code></li>
+<li>Run <code>source ./terminal_sync.sh</code><ul>
+<li><strong>Note</strong>: This must be done in each new bash session</li>
+<li>You will be prompted to install any missing dependencies</li>
+<li>On first run, you will also be prompted whether you want to install the hooks (i.e., automatically source the script in each new session)</li>
+</ul>
+</li>
+</ol>
+<p>If you decide later that you want to install the hooks, just append <code>source '&lt;PATH_TO&gt;/terminal_sync.sh'</code> to your <code>~/.bashrc</code> file.</p>
+<h3 id="powershell">PowerShell</h3>
+<ol>
+<li>Review and optionally edit the <strong>Configuration Settings</strong> section at the top of <code>terminal_sync.psm1</code></li>
+<li>Run <code>Import-Module terminal_sync.psm1</code><ul>
+<li><strong>Note</strong>: This must be done in each new PowerShell session</li>
+<li>If this fails, you may need to use <code>Set-ExecutionPolicy</code> to allow scripts</li>
+</ul>
+</li>
+</ol>
+<p>If you want to load the module automatically, run the following:</p>
+<pre><code class="language-bash"># Set the execution policy to allow scripts to run
+# Alternatively, you can set the policy to 'Bypass' to disable all warnings
+Set-ExecutionPolicy Unrestricted -Scope CurrentUser
+
+# Add terminal_sync.psm1 to your PowerShell profile so it will be loaded automatically
+Write-Output &quot;Import-Module '$(Resolve-Path terminal_sync.psm1)'&quot; | Out-File -Append -Encoding utf8 $PROFILE
+</code></pre>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../quickstart/" class="btn btn-neutral float-left" title="Quickstart"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../usage/" class="btn btn-neutral float-right" title="Usage">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../quickstart/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../usage/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme_extra.js" defer></script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>

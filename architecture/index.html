@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://breakid.github.io/terminal_sync/architecture/" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Architecture - terminal_sync</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Architecture";
+        var mkdocs_page_input_path = "architecture.md";
+        var mkdocs_page_url = "/terminal_sync/architecture/";
+      </script>
+    
+    <script src="../js/jquery-3.6.0.min.js" defer></script>
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> terminal_sync
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="..">Home</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../quickstart/">Quickstart</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../setup/">Setup</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../usage/">Usage</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../updating/">Updating</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../troubleshooting/">Troubleshooting</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Development</span></p>
+              <ul class="current">
+                  <li class="toctree-l1 current"><a class="reference internal current" href="./">Architecture</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#design-evolution">Design Evolution</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#how-terminal_sync-works">How terminal_sync Works</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#server">Server</a>
+        <ul>
+    <li class="toctree-l4"><a class="reference internal" href="#config">Config</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#ghostwriter-client">GhostWriter Client</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#api-server">API Server</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#entry">Entry</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#clients">Clients</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#execution-flow">Execution Flow</a>
+    </li>
+        </ul>
+    </li>
+    </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../developer_guide/">Developer Guide</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../style_guide/">Style Guide</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">terminal_sync</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" alt="Docs"></a> &raquo;</li>
+          <li>Development &raquo;</li>
+      <li>Architecture</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="terminal_sync-architecture">terminal_sync Architecture</h1>
+<p>This page provides additional details about how terminal_sync works and is intended for those who are:</p>
+<ol>
+<li>Interested in contributing to the project</li>
+<li>Passionately curious</li>
+</ol>
+<hr />
+<h2 id="design-evolution">Design Evolution</h2>
+<p>terminal_sync began life as a prototype intended specifically for capturing command-line tools, such as Impacket scripts, run with <code>proxychains</code>. The original version was a Python script called directly from the Bash pre-exec hook. Unfortunately, this had several limitations.</p>
+<ol>
+<li>It only supported commands run via proxychains</li>
+<li>It only supported Bash</li>
+<li>The lack of a post-exec hook meant it couldn't capture when a command completed or its success/failure status</li>
+<li>There was no way to provide a description</li>
+</ol>
+<p>The second iteration set out to address these issues. The first challenge was how to save state so that the completion time and output of a command could be matched to the original execution, thus allowing the initial log entry to be updated rather than creating a near duplicate entry. There was also a concern that, as the application configuration became more complex, the overhead of loading the config each time the script was run (i.e., before and after each execution) would negatively impact performance and the overall user experience.</p>
+<p>This second iteration used a client-server model where the server, which contained the majority of the processing logic, would load the configuration once and stay running. The client would remain lightweight and naive, containing only enough logic to capture raw data and send it to the server. Additionally, the clients would be written using native capabilities (i.e., Bash and PowerShell) to minimize dependencies, both for security and ease of installation.</p>
+<hr />
+<h2 id="how-terminal_sync-works">How terminal_sync Works</h2>
+<p>The current version of terminal_sync uses a client-server model.</p>
+<h3 id="server">Server</h3>
+<p>The terminal_sync server is a Python package consisting of four main components:</p>
+<ol>
+<li>Config class<ul>
+<li>Defined in <code>config.py</code></li>
+</ul>
+</li>
+<li>GhostWriterClient class<ul>
+<li>Defined in <code>ghostwriter.py</code></li>
+</ul>
+</li>
+<li>FastAPI server<ul>
+<li>Defined in <code>api.py</code></li>
+</ul>
+</li>
+<li>Entry class<ul>
+<li>Defined in <code>log_entry.py</code></li>
+</ul>
+</li>
+</ol>
+<p>The server must be installed or run as a module since it uses absolute imports to reference internal modules. This was done to prevent <code>isort</code> from grouping the internal modules into the third-party libraries import section.</p>
+<h4 id="config">Config</h4>
+<p>The <code>Config</code> class defines default settings, loads the YAML config file (if it exists), and checks for any environment variables that match defined settings. If the optional <code>python-dotenv</code> package is installed, environment variables will be loaded from a <code>.env</code> file before loading the YAML config. This is done because the path to the config file can be specified using the <code>TERMSYNC_CONFIG</code> variable. If <code>TERMSYNC_CONFIG</code> was included in the <code>.env</code> file but the environment variables were loaded later, the wrong config file would be loaded, which would likely confuse users. All other environment variables are evaluated after, and therefore override values from, the YAML config file. Finally, some additional validation is performed and the config object is returned.</p>
+<h4 id="ghostwriter-client">GhostWriter Client</h4>
+<p>The GhostWriter client is largely a consolidation of the REST-based <a href="https://github.com/hotnops/mythic-sync">mythic-sync</a> and GraphQL-based <a href="https://github.com/GhostManager/mythic_sync">mythic_sync</a> projects with some logic to determine which flow to use based on which API key was provided. Additionally, the exception handling was moved to the API server to allow it to send error messages back to the client.</p>
+<h4 id="api-server">API Server</h4>
+<p>The API server uses FastAPI to create two REST endpoints, <code>POST /commands/</code> and <code>PUT /commands/</code>, intended to create and update command log entries, respectively. In practice, the update endpoint will also create an entry if a matching one is not found in the internal buffer; this is to increase the likelihood of a command being logged successfully, even if the initial creation attempt failed. Since both endpoints contain nearly identical logic, the majority of the work is done in the shared <code>log_command()</code> function. This function checks whether the input command contains any keywords that would trigger logging. If so, the description is split from the command (if applicable), an <code>Entry</code> object is either created or retrieved from the internal buffer and updated, then the <code>Entry</code> object is sent to the GhostWriter client, which sends it to GhostWriter. If the submission fails, or if the config specifies all logs should be saved, the <code>Entry</code> is passed to the <code>save_log()</code> function which saves it as a JSON object.</p>
+<h4 id="entry">Entry</h4>
+<p>The <code>Entry</code> class is mostly responsible for encapsulating data as it's passed around the application but contains some logic to normalize and return it in different formats for the distinct REST and GraphQL APIs.</p>
+<h3 id="clients">Clients</h3>
+<p>The current clients, written using Bash and PowerShell, are integrated into their respective hook code and implement similar logic. They define client-side configuration settings at the top, include functions to enable/disable hooking and control verbosity, and define the hook functions themselves. The hook functions capture the raw data such as the executed command and timestamps, as well as operator and source host if the environment variables are set. This data is then packaged as a JSON object and sent to the server. The response is received and optionally printed, depending on the verbosity settings.</p>
+<p>The Bash client uses <a href="https://github.com/rcaloras/bash-preexec">bash-preexec</a> to create the <code>preexec</code> and <code>precmd</code> (i.e., post-exec) hook points and uses <code>jq</code> to construct and parse the JSON objects exchanged with the server.</p>
+<p>The PowerShell client overrides the <code>PSConsoleHostReadLine</code> and <code>Prompt</code> functions to create pre-exec and post-exec hooks.</p>
+<hr />
+<h3 id="execution-flow">Execution Flow</h3>
+<p>The terminal_sync server is started by executing <code>python -m terminal_sync</code> either directly or by running <code>pdm serve</code>. This runs the <code>__main__.py</code> module, which parses any host and port arguments and calls the <code>run()</code> function in <code>api.py</code>. When <code>api.py</code> is loaded, it instantiates a <code>Config</code> object, a <code>GhostWriterClient</code> object, and an instance of FastAPI. The <code>run()</code> method starts uvicorn to host the FastAPI instance.</p>
+<p>When a user runs a command, the client hook code intercepts it, packages the command with additional metadata (including a UUID), and sends it to the creation endpoint on the terminal_sync server. The <code>pre_exec()</code> function calls <code>log_command()</code>, which checks whether the command contains any of the configured keywords. If so, a new <code>Entry</code> object is created, added to an internal buffer, and sent to the <code>create_log()</code> method of the GhostWriter client. The GhostWriter client then uses either <code>_create_entry_graphql()</code> or <code>_create_entry_rest()</code>, depending on which API key was specified, to send the command data to GhostWriter. If succcessful, GhostWriter returns a JSON object containing the ID of the GhostWriter log entry. The GhostWriter client passes this ID back to <code>log_command()</code> where it is added to the <code>Entry</code> object. The <code>Entry</code> object and a success message are returned to the <code>pre_exec()</code> function, triggering the <code>finally</code> clause in <code>log_command()</code>. If the connection to GhostWriter had failed or if the application is configured to save all logs, <code>log_command()</code> will call <code>save_log()</code> to write the <code>Entry</code> data to a JSON file. Back in <code>pre_exec()</code>, the message is returned to the terminal_sync client. The terminal_sync client optionally displays the message, depending on the verbosity settings, and returns, allowing the command to execute.</p>
+<p>When the command completes, the client hook code intercepts execution again, records the exit status of the command, retrieves additional information about the command from the shell history, packages it all up, and sends it to the update endpoint on the terminal_sync server. The <code>post_exec()</code> function calls <code>log_command()</code>, which uses the UUID string sent with the command to retrieve the previously created <code>Entry</code> object from the internal buffer. The <code>Entry</code> is updated and sent to the GhostWriter client's <code>update_log()</code> method, which maps to either <code>_update_entry_graphql()</code> or <code>_update_entry_rest()</code>. The remainder of the flow is essentially identical to the creation flow, except, when execution returns to <code>post_exec()</code>, the <code>Entry</code> is removed from the internal buffer, since it has been processed.</p>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../troubleshooting/" class="btn btn-neutral float-left" title="Troubleshooting"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../developer_guide/" class="btn btn-neutral float-right" title="Developer Guide">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../troubleshooting/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../developer_guide/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme_extra.js" defer></script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>
