@@ -38,6 +38,4 @@ EXPOSE $LISTEN_PORT/tcp
 # FastAPI has a built-in /docs endpoint that we can use to check whether the server is running properly
 HEALTHCHECK CMD curl --fail http://localhost:$LISTEN_PORT/docs || exit 1
 
-# Run terminal_sync as a module
-# IMPORTANT: This must listen on 0.0.0.0 or else the application will not be accessible outside of the container
-CMD python3 -m terminal_sync --host 0.0.0.0 --port $LISTEN_PORT
+ENTRYPOINT python3 -m terminal_sync

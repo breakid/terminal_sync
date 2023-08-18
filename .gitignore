@@ -93,6 +93,7 @@ ipython_config.py
 #   https://pdm.fming.dev/#use-with-ide
 .pdm.toml
 .pdm-python
+.pdm-build
 
 # pipenv
 #   According to pypa/pipenv#598, it is recommended to include Pipfile.lock in version control.
@@ -169,7 +170,7 @@ cython_debug/
 
 
 # Custom
-log_archive/
+logs/
 config.yaml
 
 # Bash dependency downloaded to project repo directory (by default)

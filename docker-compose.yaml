@@ -2,7 +2,7 @@
 version: "3"
 
 services:
-  server:
+  terminal_sync:
     build:
       context: .
       dockerfile: ./Dockerfile
@@ -10,13 +10,9 @@ services:
     restart: unless-stopped
     ports:
       - "8000:8000"
-    # environment:
-    #   - GW_URL=
-    #   - GW_OPLOG_ID=
-    #   - GW_API_KEY_GRAPHQL=
-    #   - GW_API_KEY_REST=
-    #   - OPERATOR=
+    env_file:
+      - .env
     volumes:
-      - ./config.yaml:/app/config.yaml
-      - ./log_archive:/app/log_archive
+      - ./logs:/app/${TERMSYNC_JSON_LOG_DIR}
       - ./terminal_sync.log:/app/terminal_sync.log
+    entrypoint: "python3 -m terminal_sync"

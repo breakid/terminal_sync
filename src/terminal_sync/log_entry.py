@@ -4,12 +4,9 @@
 from dataclasses import asdict
 from dataclasses import dataclass
 from datetime import datetime
-from socket import AF_INET
-from socket import SOCK_DGRAM
-from socket import gethostname
-from socket import socket
 from typing import Any
 from typing import Generator
+from uuid import uuid4 as uuid
 
 
 @dataclass
@@ -18,7 +15,7 @@ class Entry:
 
     Attributes:
         oplog_id (int): The ID of the GhostWriter Oplog where entries will be written
-        command (str): The text of the command executed
+        command (str | None): The text of the command executed
         start_time (datetime): Timestamp when the command/activity began
         end_time (datetime): Timestamp when the command/activity completed
         gw_id (int | None): The log entry ID returned by GhostWriter
@@ -28,33 +25,30 @@ class Entry:
         destination_host (str | None): The target host of the activity
         tool (str | None): The name/identifier of the tool used
         user_context (str | None): Identifier for the credentials used for the command/activity
-        output (str): The output or results of the command/activity
+        output (str | None): The output or results of the command/activity
             Given the limited space in the GhostWriter UI, this is usually a success or failure note
-        description (str): The goal/intent/reason for running the command or performing the action
-        comments (str): Misc additional information about the command / activity
+        description (str | None): The goal/intent/reason for running the command or performing the action
+        comments (str | None): Misc additional information about the command / activity
     """
 
-    command: str
+    # Note: Most of these default to None so that we don't accidentally overwrite attributes when updating an entry
+    command: str | None = None
     comments: str = "Logged by terminal_sync"
-    description: str = ""
+    description: str | None = None
     destination_host: str | None = None
-    start_time: datetime = datetime.utcnow()  # start_time must be initialized before end_time
+    start_time: datetime = datetime.utcnow()
     end_time: datetime = datetime.utcnow()
     gw_id: int | None = None
     operator: str | None = None
     oplog_id: int = 0
-    output: str = ""
+    output: str | None = None
     source_host: str | None = None
     tool: str | None = None
     user_context: str | None = None
-    uuid: str = ""
+    uuid: str = str(uuid())
     # TODO: Tags are not supported by the current GraphQL interface
     # tags (list[str] | None): An arbitrary list of tags
     # tags: list[str] = field(default_factory=list)
-
-    def __post_init__(self) -> None:
-        """Initialize source_host to the local host if not explicitly set"""
-        self.source_host = self.source_host or self._get_local_host()
 
     def __iter__(self) -> Generator:
         """Iterate through an entry's attributes
@@ -63,24 +57,6 @@ class Entry:
             A tuple containing an attribute name and its value
         """
         yield from asdict(self).items()
-
-    def _get_local_host(self) -> str:
-        """Return the hostname and IP address of the local host
-
-        Returns:
-            str: The hostname and IP address of the local host (e.g., "WORKSTATION (192.168.1.20)")
-        """
-        local_ip: str = "127.0.0.1"
-
-        try:
-            # connect() for UDP doesn't send packets but can be used to determine the primary NIC
-            s: socket = socket(AF_INET, SOCK_DGRAM)
-            s.connect(("8.8.8.8", 0))
-            local_ip = s.getsockname()[0]
-        except Exception:
-            pass
-
-        return f"{gethostname()} ({local_ip})"
 
     @property  # type: ignore[no-redef]
     def command(self) -> str:
@@ -132,13 +108,18 @@ class Entry:
         return self._start_time.strftime("%F %H:%M:%S")
 
     @start_time.setter
-    def start_time(self, start_time: datetime) -> None:
+    def start_time(self, start_time: datetime | str) -> None:
         """Set the start_time
 
         Args:
-            start_time (datetime): The new start_time
+            start_time (datetime | str): The new start_time
         """
-        self._start_time = start_time if isinstance(start_time, datetime) else datetime.utcnow()
+        if start_time and isinstance(start_time, datetime):
+            self._start_time = start_time
+        elif start_time and isinstance(start_time, str):
+            self._start_time = datetime.strptime(start_time, "%Y-%m-%d %H:%M:%S")
+        else:
+            self._start_time = datetime.utcnow()
 
     @property  # type: ignore[no-redef]
     def end_time(self) -> str:
@@ -150,14 +131,21 @@ class Entry:
         return self._end_time.strftime("%F %H:%M:%S")
 
     @end_time.setter
-    def end_time(self, end_time: datetime) -> None:
+    def end_time(self, end_time: datetime | str) -> None:
         """Set the end_time, making sure it's equal to or greater than the start_time
 
         Args:
-            end_time (datetime): The new end_time
+            end_time (datetime | str): The new end_time
         """
+        if end_time and isinstance(end_time, datetime):
+            self._end_time = end_time
+        elif end_time and isinstance(end_time, str):
+            self._end_time = datetime.strptime(end_time, "%Y-%m-%d %H:%M:%S")
+        else:
+            self._end_time = datetime.utcnow()
+
         # Ensure end_date is a datetime object
-        end_time = end_time if isinstance(end_time, datetime) else datetime.utcnow()
+        end_time = end_time if end_time and isinstance(end_time, datetime) else datetime.utcnow()
 
         # Note: Use _start_time rather than start_time to avoid:
         #   TypeError: '<' not supported between instances of 'datetime.datetime' and 'str'
@@ -181,7 +169,9 @@ class Entry:
         """
         # Note: Used __dataclass_fields__ rather than hasattr() because hasattr() returns false unless the field
         # has a default value
-        return cls(**{key: value for key, value in args.items() if key in cls.__dataclass_fields__})
+        return cls(
+            **{key: value for key, value in args.items() if key in cls.__dataclass_fields__ and value is not None}
+        )
 
     def gw_fields(self) -> dict[str, int | str]:
         """Return a dictionary of non-empty entry attributes using the Ghostwriter field names
@@ -224,7 +214,7 @@ class Entry:
         """
         return {attr: value for attr, value in self if value is not None}
 
-    def update(self, args: dict[str, Any]) -> None:
+    def update(self, args: dict[str, Any]):
         """Update specified entry attributes
 
         Args:
@@ -237,3 +227,5 @@ class Entry:
             if value is not None and attr in self.__dataclass_fields__ and attr not in protected_fields:
                 # if value is not None and self.hasattr(self, key) and key not in protected_fields:
                 setattr(self, attr, value)
+
+        return self

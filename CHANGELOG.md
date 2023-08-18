@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.4.0] - Unreleased
+
+### Added
+
+- Added support for updating an existing Ghostwriter log entry by ID (experimental)
+- Config option to disable SSL certificate checking on the Ghostwriter server
+
+### Changed
+
+- Completely overhauled `terminal_sync` to be a CLI rather than a client-server application
+  - This was done to simplify the application, make it more reliable, and fix an issue where the server (Docker container) would stop responding when left running for extended periods of time (e.g., 24 hours)
+
 ## [v0.3.0] - 2023-05-02
 
 ### Added

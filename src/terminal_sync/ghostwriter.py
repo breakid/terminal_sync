@@ -13,12 +13,15 @@ from gql.transport.aiohttp import AIOHTTPTransport
 
 # Internal Libraries
 from terminal_sync import __version__ as termsync_version
+from terminal_sync.config import Config
 from terminal_sync.log_entry import Entry
 
-logger = logging.getLogger("terminal_sync")
+logger = logging.getLogger(__name__)
 
 # Suppress overly verbose logging
 logging.getLogger("gql.transport.aiohttp").setLevel(logging.WARNING)
+
+config = Config()
 
 
 class GhostWriterClient:
@@ -102,6 +105,7 @@ class GhostWriterClient:
             ValueError: If an invald neither API key was specified
         """
         # Validate arguments
+        # This is done in the config but done again here, in case this client is reused for another application
         if not url.startswith("http"):
             raise ValueError("Invalid GhostWriter URL")
 
@@ -121,18 +125,21 @@ class GhostWriterClient:
         self.update_log: Callable = self._update_entry_graphql
 
         if graphql_api_key:
-            logger.info("Using the GraphQL API")
             url = f"{self.base_url}/v1/graphql"
+
+            logger.debug(f"Using the GraphQL API ({url})")
+
             # WORKAROUND: When running Docker on a Windows host, the application will always hang waiting for the SSL
             # connection to terminate. The ssl_close_timeout is therefore set to 0 to avoid a negative user experience
             self._transport: AIOHTTPTransport = AIOHTTPTransport(
                 url=url, headers=self.headers, ssl_close_timeout=0, timeout=timeout_seconds
             )
         else:
-            logger.info("Using the REST API")
             # Important: If you leave off the trailing "/" on oplog/api/entries/ then this POST will return "200 OK"
             # without actually doing anything
             self.rest_url: str = f"{self.base_url}/oplog/api/entries/"
+
+            logger.debug(f"Using the REST API ({self.rest_url})")
 
             # Redirect create_log() and update_log() function calls to the REST implementation
             self.create_log = self._create_entry_rest
@@ -152,9 +159,9 @@ class GhostWriterClient:
             int | None: The ID of the GhostWriter entry if successful, otherwise None
         """
         if entry.gw_id is None:
-            return await self._create_log(entry)
+            return await self.create_log(entry)
 
-        return await self._update_log(entry)
+        return await self.update_log(entry)
 
     # =========================================================================
     # ******                        REST function                         *****
@@ -176,7 +183,9 @@ class GhostWriterClient:
 
         data: dict[str, int | str] = entry.gw_fields()
 
-        async with aiohttp.ClientSession(headers=self.headers) as session:
+        async with aiohttp.ClientSession(
+            headers=self.headers, connector=aiohttp.TCPConnector(verify_ssl=config.gw_ssl_check)
+        ) as session:
             async with session.post(self.rest_url, json=data) as resp:
                 resp = await resp.json()
                 logger.debug(f"Response: {resp}")
@@ -184,7 +193,6 @@ class GhostWriterClient:
                 if resp.get("detail"):
                     raise Exception(resp.get("detail"))
 
-                logger.info(f'Logged "{entry.command}" to GhostWriter as ID: {resp.get("id")}')
                 return resp.get("id")
 
     async def _update_entry_rest(self, entry: Entry) -> int | None:
@@ -205,7 +213,9 @@ class GhostWriterClient:
 
         data: dict[str, int | str] = entry.gw_fields()
 
-        async with aiohttp.ClientSession(headers=self.headers) as session:
+        async with aiohttp.ClientSession(
+            headers=self.headers, connector=aiohttp.TCPConnector(verify_ssl=config.gw_ssl_check)
+        ) as session:
             async with session.put(url, json=data) as resp:
                 resp = await resp.json()
                 logger.debug(f"Response: {resp}")
@@ -213,7 +223,6 @@ class GhostWriterClient:
                 if resp.get("detail"):
                     raise Exception(resp.get("detail"))
 
-                logger.info(f"Updated GhostWriter entry with ID: {entry.gw_id}")
                 return resp.get("id")
 
     # =========================================================================
@@ -259,10 +268,9 @@ class GhostWriterClient:
         entry_id: int = resp.get("insert_oplogEntry", {}).get("returning", [{"id": None}])[0].get("id")
 
         if entry_id:
-            logger.info(f"Logged to GhostWriter with ID: {entry_id}")
             return entry_id
         else:
-            logger.error(f"Did not receive a response with data from Ghostwriter's GraphQL API! Response: {resp}")
+            raise Exception(f"Did not receive a response with data from Ghostwriter's GraphQL API! Response: {resp}")
 
         return None
 
@@ -287,9 +295,8 @@ class GhostWriterClient:
         entry_id: int = resp.get("update_oplogEntry", {}).get("returning", [{"id": None}])[0].get("id")
 
         if entry_id:
-            logger.info(f"Updated GhostWriter entry with ID: {entry_id}")
             return entry_id
         else:
-            logger.error(f"Did not receive a response with data from Ghostwriter's GraphQL API! Response: {resp}")
+            raise Exception(f"Did not receive a response with data from Ghostwriter's GraphQL API! Response: {resp}")
 
         return None

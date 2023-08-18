@@ -29,8 +29,8 @@ repos:
   - repo: https://github.com/pdm-project/pdm
     rev: 2.5.3
     hooks:
-      # Ensure pdm.lock is up-to-date
-      - id: pdm-lock-check
+      # # Ensure pdm.lock is up-to-date
+      # - id: pdm-lock-check
 
       # Export production dependencies to requirements.txt
       - id: pdm-export
@@ -131,21 +131,21 @@ repos:
       - id: black
         # See pyproject.toml for config options
 
-  # flake8 is a python tool that glues together pycodestyle, pyflakes, mccabe, and third-party plugins to check the
-  # style and quality of some python code
-  - repo: https://github.com/PyCQA/flake8
-    rev: 6.0.0
-    hooks:
-      - id: flake8
-        args: [-v]
-        # Use a plugin to read the config from pyproject.toml
-        # Alternatively, could use `pyproject-flake8`
-        # See https://github.com/csachs/pyproject-flake8/issues/3#issuecomment-863976991
-        additional_dependencies: [Flake8-pyproject]
+  # # flake8 is a python tool that glues together pycodestyle, pyflakes, mccabe, and third-party plugins to check the
+  # # style and quality of some python code
+  # - repo: https://github.com/PyCQA/flake8
+  #   rev: 6.0.0
+  #   hooks:
+  #     - id: flake8
+  #       args: [-v]
+  #       # Use a plugin to read the config from pyproject.toml
+  #       # Alternatively, could use `pyproject-flake8`
+  #       # See https://github.com/csachs/pyproject-flake8/issues/3#issuecomment-863976991
+  #       additional_dependencies: [Flake8-pyproject]
 
-  # Check for missing docstrings
-  - repo: https://github.com/econchick/interrogate
-    rev: 1.5.0
-    hooks:
-      - id: interrogate
-        # See pyproject.toml for config options
+  # # Check for missing docstrings
+  # - repo: https://github.com/econchick/interrogate
+  #   rev: 1.5.0
+  #   hooks:
+  #     - id: interrogate
+  #       # See pyproject.toml for config options

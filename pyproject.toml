@@ -4,21 +4,15 @@ build-backend = "pdm.backend"
 
 [project]
 name = "terminal_sync"
-version = "0.3.0"
+version = "0.4.0"
 description = "A standalone tool for logging shell commands to GhostWriter automatically"
 authors = [{ name = "breakid" }]
 license = { text = "GPL-3.0-or-later" }
 readme = "README.md"
-requires-python = ">=3.10" # The type hinting used in this project follows PEP 604, which was implemented in 3.10
-dependencies = [
-  "aiohttp>=3.8.4",
-  "fastapi>=0.95.0",
-  "gql>=3.4.0",
-  "python-dotenv>=1.0.0",
-  "pyyaml>=6.0",
-  "uvicorn>=0.21.1",
-]
-keywords = ["GhostWriter"]
+# The type hinting used in this project follows PEP 604, which was implemented in 3.10
+requires-python = ">=3.10"
+dependencies = ["aiohttp>=3.8.4", "gql>=3.4.0", "python-dotenv>=1.0.0"]
+keywords = ["Ghostwriter", "Logging"]
 
 [project.urls]
 homepage = "https://github.com/breakid/terminal_sync"
@@ -54,18 +48,12 @@ disable_error_code = "attr-defined"
 [tool.pdm]
 
 [tool.pdm.dev-dependencies]
-dev = [
-  "black>=23.3.0",
-  "pytest>=7.3.0",
-  "pre-commit>=3.2.2",
-  "types-PyYAML>=6.0.12.9",
-]
+dev = ["black>=23.3.0", "pytest>=7.3.0", "pre-commit>=3.2.2"]
 docs = ["mkdocs>=1.4.2"]
 
 [tool.pdm.scripts]
 check = "pre-commit run --all-files"
-code = "code terminal_sync.code-workspace"
+code = "code ."
 # Run the documentation server on 8080 so it doesn't interfere with the terminal_sync server
 docs = "mkdocs serve --dev-addr 127.0.0.1:8080"
-serve = "python -m terminal_sync"
 test = "pytest"
