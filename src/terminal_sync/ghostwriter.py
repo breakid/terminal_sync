@@ -1,19 +1,17 @@
-"""Defines a GhostWriter client class"""
+"""Defines a Ghostwriter client class"""
 
 # Standard Libraries
 import logging
 from collections.abc import Callable
 
 # Third-party Libraries
-import aiohttp
+from httpx import AsyncClient
 from gql import Client
 from gql import gql
 from gql.client import DocumentNode
 from gql.transport.aiohttp import AIOHTTPTransport
 
 # Internal Libraries
-from terminal_sync import __version__ as termsync_version
-from terminal_sync.config import Config
 from terminal_sync.log_entry import Entry
 
 logger = logging.getLogger(__name__)
@@ -21,17 +19,16 @@ logger = logging.getLogger(__name__)
 # Suppress overly verbose logging
 logging.getLogger("gql.transport.aiohttp").setLevel(logging.WARNING)
 
-config = Config()
 
-
-class GhostWriterClient:
-    """Defines a GhostWriter client
+class GhostwriterClient:
+    """Defines a Ghostwriter client
 
     Attributes:
-        base_url (str): The base URL where GhostWriter is hosted (e.g., "https://ghostwriter.example.com")
-        oplog_id (int): The ID of the GhostWriter Oplog where entries will be written
-        headers (dict[str, str]): A dictionary of HTTP headers used to communicate with GhostWriter
+        base_url (str): The base URL where Ghostwriter is hosted (e.g., "https://ghostwriter.example.com")
+        oplog_id (int): The ID of the Ghostwriter Oplog where entries will be written
+        headers (dict[str, str]): A dictionary of HTTP headers used to communicate with Ghostwriter
         rest_url (str): The base URL for REST API communications
+        verify_ssl (bool): Whether to validate the SSL/TLS certificate of the Ghostwriter server
     """
 
     # Query inserting a new log entry
@@ -92,33 +89,45 @@ class GhostWriterClient:
         """
     )
 
-    def __init__(self, url: str, graphql_api_key: str = "", rest_api_key: str = "", timeout_seconds: int = 10) -> None:
-        """Initializes a GhostWriter client
+    def __init__(
+        self,
+        url: str,
+        graphql_api_key: str = "",
+        rest_api_key: str = "",
+        user_agent: str = "Ghostwriter Python Client",
+        timeout_seconds: int = 10,
+        verify_ssl: bool = True,
+    ) -> None:
+        """Initializes a Ghostwriter client
 
         Args:
-            url (str): The base URL where GhostWriter is hosted (e.g., "https://ghostwriter.example.com")
-            graphql_api_key (str, optional): A GhostWriter GraphQL API key. Defaults to "".
-            rest_api_key (str, optional): A GhostWriter REST API key. Defaults to "".
+            url (str): The base URL where Ghostwriter is hosted (e.g., "https://ghostwriter.example.com")
+            graphql_api_key (str, optional): A Ghostwriter GraphQL API key. Defaults to "".
+            rest_api_key (str, optional): A Ghostwriter REST API key. Defaults to "".
+            user_agent (str, optional): The User-Agent string to send with the Ghostwriter request. Defaults to "Ghostwriter Python Client".
             timeout_seconds (int, optional): Seconds the client will wait for a response. Defaults to 10.
+            verify_ssl (bool, optional): Whether to validate the SSL/TLS certificate of the Ghostwriter server. Defaults to True.
 
         Raises:
-            ValueError: If an invald neither API key was specified
+            ValueError: If an invalid URL or neither API key was specified
         """
         # Validate arguments
-        # This is done in the config but done again here, in case this client is reused for another application
+        # Note: This is done in the config but done again here, in case this client is reused for another application
         if not url.startswith("http"):
-            raise ValueError("Invalid GhostWriter URL")
+            raise ValueError("Invalid Ghostwriter URL")
 
         if not graphql_api_key and not rest_api_key:
-            raise ValueError("No GhostWriter API key specified")
+            raise ValueError("No Ghostwriter API key specified")
 
         self.base_url: str = url.rstrip("/")
 
         self.headers: dict[str, str] = {
-            "User-Agent": f"terminal_sync/{termsync_version}",
+            "User-Agent": user_agent,
             "Authorization": f"Bearer {graphql_api_key}" if graphql_api_key else f"Api-Key {rest_api_key}",
             "Content-Type": "application/json",
         }
+
+        self.verify_ssl: bool = verify_ssl
 
         # Set create_log() and update_log() functions to call the GraphQL implementation
         self.create_log: Callable = self._create_entry_graphql
@@ -132,7 +141,11 @@ class GhostWriterClient:
             # WORKAROUND: When running Docker on a Windows host, the application will always hang waiting for the SSL
             # connection to terminate. The ssl_close_timeout is therefore set to 0 to avoid a negative user experience
             self._transport: AIOHTTPTransport = AIOHTTPTransport(
-                url=url, headers=self.headers, ssl_close_timeout=0, timeout=timeout_seconds
+                url=url,
+                headers=self.headers,
+                ssl=self.verify_ssl,
+                ssl_close_timeout=0,
+                timeout=timeout_seconds,
             )
         else:
             # Important: If you leave off the trailing "/" on oplog/api/entries/ then this POST will return "200 OK"
@@ -156,7 +169,7 @@ class GhostWriterClient:
             entry (Entry): The entry object to be recorded
 
         Returns:
-            int | None: The ID of the GhostWriter entry if successful, otherwise None
+            int | None: The ID of the Ghostwriter entry if successful, otherwise None
         """
         if entry.gw_id is None:
             return await self.create_log(entry)
@@ -174,26 +187,26 @@ class GhostWriterClient:
             entry (Entry): The entry object to be recorded
 
         Returns:
-            int | None: The ID of the GhostWriter log entry
+            int | None: The ID of the Ghostwriter log entry
 
         Raises:
-            Exception: If an error occurred while communicating with GhostWriter
+            Exception: If an error occurred while communicating with Ghostwriter
         """
         logger.debug(f"[REST] Creating entry for: {entry}")
 
         data: dict[str, int | str] = entry.gw_fields()
 
-        async with aiohttp.ClientSession(
-            headers=self.headers, connector=aiohttp.TCPConnector(verify_ssl=config.gw_ssl_check)
-        ) as session:
-            async with session.post(self.rest_url, json=data) as resp:
-                resp = await resp.json()
-                logger.debug(f"Response: {resp}")
+        async with AsyncClient(headers=self.headers, verify=self.verify_ssl) as client:
+            response = await client.post(self.rest_url, json=data)
 
-                if resp.get("detail"):
-                    raise Exception(resp.get("detail"))
+            resp: dict = response.json()
 
-                return resp.get("id")
+            logger.debug(f"Response: {resp}")
+
+            if resp.get("detail"):
+                raise Exception(resp.get("detail"))
+
+            return resp.get("id")
 
     async def _update_entry_rest(self, entry: Entry) -> int | None:
         """Update an entry in Ghostwriter's Oplog (PUT) using the REST API
@@ -202,10 +215,10 @@ class GhostWriterClient:
             entry (Entry): The entry object to be recorded
 
         Returns:
-            int | None: The ID of the GhostWriter log entry
+            int | None: The ID of the Ghostwriter log entry
 
         Raises:
-            Exception: If an error occurred while communicating with GhostWriter
+            Exception: If an error occurred while communicating with Ghostwriter
         """
         logger.debug(f"[REST] Updating entry: {entry}")
 
@@ -213,17 +226,17 @@ class GhostWriterClient:
 
         data: dict[str, int | str] = entry.gw_fields()
 
-        async with aiohttp.ClientSession(
-            headers=self.headers, connector=aiohttp.TCPConnector(verify_ssl=config.gw_ssl_check)
-        ) as session:
-            async with session.put(url, json=data) as resp:
-                resp = await resp.json()
-                logger.debug(f"Response: {resp}")
+        async with AsyncClient(headers=self.headers, verify=self.verify_ssl) as client:
+            response = await client.put(url, json=data)
 
-                if resp.get("detail"):
-                    raise Exception(resp.get("detail"))
+            resp: dict = response.json()
 
-                return resp.get("id")
+            logger.debug(f"Response: {resp}")
+
+            if resp.get("detail"):
+                raise Exception(resp.get("detail"))
+
+            return resp.get("id")
 
     # =========================================================================
     # ******                      GraphQL functions                       *****
@@ -240,7 +253,7 @@ class GhostWriterClient:
             A dictionary containing the server's response
 
         Raises:
-            Exception: If an error occurred while communicating with GhostWriter
+            Exception: If an error occurred while communicating with Ghostwriter
         """
         logger.debug(f"variable_values: {values}")
 
@@ -254,10 +267,10 @@ class GhostWriterClient:
             entry (Entry): The entry object to be recorded
 
         Returns:
-            int | None: The ID of the GhostWriter log entry
+            int | None: The ID of the Ghostwriter log entry
 
         Raises:
-            Exception: If an error occurred while communicating with GhostWriter
+            Exception: If an error occurred while communicating with Ghostwriter
         """
         logger.debug(f"[GraphQL] Creating entry for: {entry}")
 
@@ -281,10 +294,10 @@ class GhostWriterClient:
             entry (Entry): The entry object to be recorded
 
         Returns:
-            int | None: The ID of the GhostWriter log entry
+            int | None: The ID of the Ghostwriter log entry
 
         Raises:
-            Exception: If an error occurred while communicating with GhostWriter
+            Exception: If an error occurred while communicating with Ghostwriter
         """
         logger.debug(f"[GraphQL] Updating log entry: {entry}")
 

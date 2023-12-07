@@ -2,17 +2,17 @@
 
 ## Overview
 
-terminal_sync is a standalone tool for logging Bash and PowerShell commands to [GhostWriter](https://github.com/GhostManager/Ghostwriter) automatically. The provided Bash script and PowerShell module register pre-exec and post-exec hooks that capture and send information about executed commands to the terminal_sync server for additional processing and enrichment. Once properly configured, any commands that meet the configured logging criteria (e.g., contain a specific keyword) are sent to GhostWriter.
+terminal_sync is a standalone tool for logging Bash and PowerShell commands to [Ghostwriter](https://github.com/GhostManager/Ghostwriter) automatically. The provided Bash script and PowerShell module register pre-exec and post-exec hooks that capture and send information about executed commands to the terminal_sync server for additional processing and enrichment. Once properly configured, any commands that meet the configured logging criteria (e.g., contain a specific keyword) are sent to Ghostwriter.
 
 ---
 
 ## Features
 
 - **Automatic Shell Logging**
-      - Logs Bash and PowerShell commands directly to GhostWriter based on a configurable keyword list
+      - Logs Bash and PowerShell commands directly to Ghostwriter based on a configurable keyword list
 
 - **Export Log Entries to CSV**
-      - Saves failed (or optionally all) command log entries to JSON files that can be [converted to CSV](usage.md#export-logs-to-ghostwriter-csv) and imported into GhostWriter
+      - Saves failed (or optionally all) command log entries to JSON files that can be [converted to CSV](usage.md#export-logs-to-ghostwriter-csv) and imported into Ghostwriter
       - Supports off-line logging
 
 - **Command Timestamps**
@@ -47,4 +47,4 @@ terminal_sync is a standalone tool for logging Bash and PowerShell commands to [
 
 The terminal_sync server is intended to be run locally and therefore does not include authentication or encryption. Should you choose to run the server on a remote host, it is highly recommended that you run it on `localhost` and use an SSH forward tunnel, or similar mechanism, to access it.
 
-Similarly, terminal_sync was (mostly) designed with a single user per instance in mind. The one exception is that if the `OPERATOR` environment variable is set within a client shell session, this value will override the operator setting on the server, thus allowing multiple users to share a terminal_sync server. That said, the server itself only supports a single API key / token per instance, so make sure all users with access to the server are authorized for that level of access to GhostWriter.
+Similarly, terminal_sync was (mostly) designed with a single user per instance in mind. The one exception is that if the `OPERATOR` environment variable is set within a client shell session, this value will override the operator setting on the server, thus allowing multiple users to share a terminal_sync server. That said, the server itself only supports a single API key / token per instance, so make sure all users with access to the server are authorized for that level of access to Ghostwriter.

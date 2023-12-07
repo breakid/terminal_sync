@@ -1,3 +1,8 @@
+"""Test the Entry class
+
+Note: Automatically imports fixture from conftest.py
+"""
+
 # Standard Libraries
 from datetime import datetime
 from re import Pattern
@@ -6,7 +11,6 @@ from typing import Any
 from typing import Generator
 
 # Third-party Libraries
-from pytest import fixture
 from pytest import raises
 
 # Internal Libraries
@@ -15,42 +19,6 @@ from terminal_sync.log_entry import Entry
 # Define common patterns that can be reused in multiple tests
 DATE_PATTERN: Pattern = compile(r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}")
 HOST_PATTERN: Pattern = compile(r".*? \(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\)")
-
-
-@fixture
-def basic_entry() -> Entry:
-    """Return a new Entry object using only mandatory arguments
-
-    Returns:
-        Entry: An Entry object with only mandatory fields set
-    """
-    return Entry(command="  proxychains4 python3 smbclient.py SGC.HWS.MIL/sam.carter:password@SGCDC001.SGC.HWS.MIL  ")
-
-
-@fixture
-def filled_out_entry() -> Entry:
-    """Return a new Entry object using all arguments
-
-    Returns:
-        Entry: An Entry object with all fields set
-    """
-    return Entry(
-        command="  proxychains4 python3 smbclient.py SGC.HWS.MIL/sam.carter:password@SGCDC001.SGC.HWS.MIL  ",
-        comments="PowerShell Session: bd58093b-9b74-4f49-b71f-7f6dcf4be130",
-        description="Uploaded files to target",
-        destination_host="",
-        end_time=datetime.fromisoformat("2022-12-01 09:29:10"),  # 50 seconds less than the start time
-        gw_id=2,
-        oplog_id=1,
-        operator="neo",
-        output="Success",
-        source_host="localhost (127.0.0.1)",
-        start_time=datetime.fromisoformat("2022-12-01 09:30:00"),
-        tool="smbclient.py",
-        user_context="SGC.HWS.MIL/sam.carter",
-        uuid="c8f897a6-d3c9-4432-8d29-4df99773892d.18",
-        # tags=None,
-    )
 
 
 def test_creation(filled_out_entry: Entry) -> None:
@@ -80,7 +48,7 @@ def test_creation(filled_out_entry: Entry) -> None:
     # assert entry.tags is None
 
 
-def test_default_values(basic_entry: Entry) -> None:
+def test_default_values(basic_entry: Entry, helpers) -> None:
     """Verify default values are set
 
     Args:
@@ -98,14 +66,12 @@ def test_default_values(basic_entry: Entry) -> None:
     assert entry.gw_id is None
     assert entry.operator is None
     assert entry.oplog_id == 0
-    assert entry.output == ""
-    assert isinstance(entry.source_host, str) and HOST_PATTERN.match(
-        entry.source_host
-    ), f"Expected source_host to be a string with pattern '<hostname> (<IP>)'; got {type(entry.source_host)}"
+    assert entry.output is None
+    assert entry.source_host is None
     assert isinstance(entry.start_time, str) and DATE_PATTERN.match(entry.start_time)
     assert entry.tool is None
     assert entry.user_context is None
-    assert entry.uuid == ""
+    assert helpers.is_uuid(entry.uuid)
     # assert entry.tags is None
 
 
@@ -133,6 +99,37 @@ def test_fields(filled_out_entry: Entry) -> None:
     assert fields["user_context"] == "SGC.HWS.MIL/sam.carter"
     assert fields["uuid"] == "c8f897a6-d3c9-4432-8d29-4df99773892d.18"
     # assert "tags" not in fields
+
+
+def test_from_dict(filled_out_entry: Entry) -> None:
+    #entry: Entry = Entry.from_dict(**dict(filled_out_entry))
+
+    # assert entry == filled_out_entry, f"Expected {filled_out_entry}; got: {entry}"
+
+    attrs: dict[str, int | str] = {
+        "command": "proxychains4 python3 smbclient.py SGC.HWS.MIL/sam.carter:password@SGCDC001.SGC.HWS.MIL",
+        "comments": "PowerShell Session: bd58093b-9b74-4f49-b71f-7f6dcf4be130",
+        "description": "Uploaded files to target",
+        "destination_host": "",
+        "start_time": "2022-12-01 09:30:00",
+        "end_time": "2022-12-01 09:30:00",
+        "gw_id": 2,
+        "operator": "neo",
+        "oplog_id": 1,
+        "output": "Success",
+        "source_host": "localhost (127.0.0.1)",
+        "tool": "smbclient.py",
+        "user_context": "SGC.HWS.MIL/sam.carter",
+        "uuid": "c8f897a6-d3c9-4432-8d29-4df99773892d.18",
+        # "tags": None,
+    }
+
+    entry: Entry = Entry.from_dict(attrs)
+
+    # Verify the correct values are returned
+    for attr, expected_value in attrs.items():
+        value = getattr(entry, attr)
+        assert value == expected_value, f"Expected: '{expected_value}'; got: '{value}'"
 
 
 def test_gw_fields(filled_out_entry: Entry) -> None:
@@ -210,6 +207,18 @@ def test_json_filename(filled_out_entry) -> None:
     assert entry.json_filename() == "1_2022-12-01_093000_c8f897a6-d3c9-4432-8d29-4df99773892d.18.json"
 
 
+def test_time_parsing() -> None:
+    entry: Entry = Entry(
+        command="ps -ef #desc",
+        end_time="2022-12-01 09:29:10", # 50 seconds less than the start time
+        start_time="2022-12-01 09:30:00"
+    )
+
+    assert entry is not None, "A valid entry should be created when passing the start and end time as strings"
+    assert entry.end_time == "2022-12-01 09:30:00", f"Expected the end time to be parsed, compared against the start time ({entry.start_time}), and updated to match the start time since it occurred before the start time; Actual: {entry.end_time}"
+    assert entry.start_time == "2022-12-01 09:30:00", f"Expected '2022-12-01 09:30:00'; got: '{entry.start_time}'"
+
+
 def test_update(filled_out_entry: Entry) -> None:
     """Verify that `update()` updates the end_time, output, and comments; does not update start_time;
     and ignores keys that do not match attributes
@@ -244,7 +253,7 @@ def test_update(filled_out_entry: Entry) -> None:
     # Verify start_time was not updated and the remaining fields were
     assert entry.comments == new_comment
     assert entry.end_time == new_end_time, f"End time should be updated; got: {entry.end_time}"
-    assert entry.output == new_output, f"Expected '{new_output}'; got: {entry.output}"
+    assert entry.output == new_output, f"Expected '{new_output}'; got: '{entry.output}'"
     assert entry.start_time == original_start_time, f"Start time should not be updated; got: {entry.start_time}"
 
     # Verify if end_time < start_time, the end_time is set to match start_time

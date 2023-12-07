@@ -18,7 +18,6 @@ FROM python:3.11-slim
 # ENV LANG=C.UTF-8  # Defined in the base image
 ENV LC_ALL=C.UTF-8
 ENV LC_TIME=C.UTF-8
-ENV LISTEN_PORT=8000
 # Enable Python optimizations
 ENV PYTHONOPTIMIZE=1
 
@@ -28,14 +27,11 @@ WORKDIR /app
 COPY --from=requirements-stage /tmp/requirements.txt /app/requirements.txt
 
 # Upgrade pip and install / upgrade required packages
-RUN pip install --no-cache-dir --upgrade pip && pip install --no-cache-dir --upgrade -r requirements.txt
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir --upgrade -r requirements.txt
 
 # Copy the application code into the container
 COPY ./src/terminal_sync ./terminal_sync
 
-EXPOSE $LISTEN_PORT/tcp
-
-# FastAPI has a built-in /docs endpoint that we can use to check whether the server is running properly
-HEALTHCHECK CMD curl --fail http://localhost:$LISTEN_PORT/docs || exit 1
-
-ENTRYPOINT python3 -m terminal_sync
+# Note: Define the entrypoint in docker-compose.yml to make it easier to switch to bash for debugging
+#ENTRYPOINT python3 -m terminal_sync

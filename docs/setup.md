@@ -46,9 +46,9 @@ Environment variables match the upper-case version (on case-sensitive systems) o
 
 The server will automatically load any environment variables defined in a `.env` file.
 
-At a minimum, the `gw_url`, `gw_oplog_id`, and at least one of `gw_api_key_graphql` or `gw_api_key_rest` must be configured for terminal_sync to log to GhostWriter. If both API keys are set, terminal_sync will use GraphQL by default.
+At a minimum, the `gw_url`, `gw_oplog_id`, and at least one of `gw_api_key_graphql` or `gw_api_key_rest` must be configured for terminal_sync to log to Ghostwriter. If both API keys are set, terminal_sync will use GraphQL by default.
 
-**Note**: To allow terminal_sync to be used off-line or independent of GhostWriter, the server will display a warning but _**start successfully**_ even if these values are not provided. In this case, local logging will be enabled by default.
+**Note**: To allow terminal_sync to be used off-line or independent of Ghostwriter, the server will display a warning but _**start successfully**_ even if these values are not provided. In this case, local logging will be enabled by default.
 
 ---
 

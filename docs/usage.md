@@ -6,7 +6,7 @@ The entire point of terminal_sync is to log shell commands automatically. Theref
 
 ## Specify the Source Host
 
-Set the environment variable `SRC_HOST` to the host where your activity will originate. This value will appear in the Source field on GhostWriter and is particularly useful when operating over a SOCKS proxy or tunnel. If the client (i.e., hook) environment is different than the terminal_sync server environment (e.g., if using Docker), the client-side value will override the server-side value.
+Set the environment variable `SRC_HOST` to the host where your activity will originate. This value will appear in the Source field on Ghostwriter and is particularly useful when operating over a SOCKS proxy or tunnel. If the client (i.e., hook) environment is different than the terminal_sync server environment (e.g., if using Docker), the client-side value will override the server-side value.
 
 If this value is not provided, terminal_sync will default to the hostname and IP of the host where the server is running. If using Docker, this will be the container.
 
@@ -34,11 +34,11 @@ In Bash, simply run `Set-TermSyncVersbosity`; this will print a list of display 
 
 In PowerShell, type `Set-TermSyncVerbosity`, followed by a space, then press **Tab** to cycle through the available options. Press **Enter** to select your preferred setting.
 
-## Export Logs to GhostWriter CSV
+## Export Logs to Ghostwriter CSV
 
-Any log entries that cannot be sent to GhostWriter successfully, such as due to a configuration or connectivity issue, will be saved (local to the server) in JSON format. The configuration setting `termsync_save_all_local` can be used to override this behavior and save all entries, even those logged to GhostWriter successfully. If the GhostWrite URL or API keys are not provided, this setting is automatically enabled to prevent accidental loss of logs.
+Any log entries that cannot be sent to Ghostwriter successfully, such as due to a configuration or connectivity issue, will be saved (local to the server) in JSON format. The configuration setting `termsync_save_all_local` can be used to override this behavior and save all entries, even those logged to Ghostwriter successfully. If the GhostWrite URL or API keys are not provided, this setting is automatically enabled to prevent accidental loss of logs.
 
-On shutdown, the terminal_sync server will attempt to export these saved logs to a timestamped CSV file that can be imported to GhostWriter. The `export_csv.py` script can also be run manually to generate a CSV file without stopping the server.
+On shutdown, the terminal_sync server will attempt to export these saved logs to a timestamped CSV file that can be imported to Ghostwriter. The `export_csv.py` script can also be run manually to generate a CSV file without stopping the server.
 
 ```bash
 # Usage:

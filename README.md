@@ -1,6 +1,6 @@
 # terminal_sync
 
-terminal_sync is a standalone tool for logging Bash and PowerShell commands to [GhostWriter](https://github.com/GhostManager/Ghostwriter) automatically. The provided Bash script and PowerShell module register pre-exec and post-exec hooks that capture executed commands and function as clients, sending command information to the terminal_sync server for additional processing and enrichment. Any commands that meet the logging criteria (e.g., contain a specific keyword) are sent to GhostWriter.
+terminal_sync is a standalone tool for logging Bash and PowerShell commands to [Ghostwriter](https://github.com/GhostManager/Ghostwriter) automatically. The provided Bash script and PowerShell module register pre-exec and post-exec hooks that capture executed commands and function as clients, sending command information to the terminal_sync server for additional processing and enrichment. Any commands that meet the logging criteria (e.g., contain a specific keyword) are sent to Ghostwriter.
 
 For more information, including [how to get started](https://breakid.github.io/terminal_sync/setup), please refer to our [documentation](https://breakid.github.io/terminal_sync/)
 
@@ -9,10 +9,10 @@ For more information, including [how to get started](https://breakid.github.io/t
 ## Features
 
 - **Automatic Shell Logging**
-      - Logs Bash and PowerShell commands directly to GhostWriter based on a configurable keyword list
+      - Logs Bash and PowerShell commands directly to Ghostwriter based on a configurable keyword list
 
 - **Export Log Entries to CSV**
-      - Saves failed (or optionally all) command log entries to JSON files that can be [converted to CSV](usage.md#export-logs-to-ghostwriter-csv) and imported into GhostWriter
+      - Saves failed (or optionally all) command log entries to JSON files that can be [converted to CSV](usage.md#export-logs-to-ghostwriter-csv) and imported into Ghostwriter
       - Supports off-line logging
 
 - **Command Timestamps**
@@ -43,6 +43,6 @@ For more information, including [how to get started](https://breakid.github.io/t
 
 Many thanks to:
 
-- Everyone who contributed to [GhostWriter](https://github.com/GhostManager/Ghostwriter) and specifically [chrismaddalena](https://github.com/chrismaddalena), [its-a-feature](https://github.com/its-a-feature), and [hotnops](https://github.com/hotnops) for their work on [mythic_sync](https://github.com/GhostManager/mythic_sync) (GraphQL) and [mythic-sync](https://github.com/hotnops/mythic-sync) (REST), from which terminal_sync "borrowed" liberally
+- Everyone who contributed to [Ghostwriter](https://github.com/GhostManager/Ghostwriter) and specifically [chrismaddalena](https://github.com/chrismaddalena), [its-a-feature](https://github.com/its-a-feature), and [hotnops](https://github.com/hotnops) for their work on [mythic_sync](https://github.com/GhostManager/mythic_sync) (GraphQL) and [mythic-sync](https://github.com/hotnops/mythic-sync) (REST), from which terminal_sync borrowed liberally
 - [rcaloras](https://github.com/rcaloras) and everyone who contributed to [bash-preexec](https://github.com/rcaloras/bash-preexec)
   - Finding this tool inspired me to build the first prototype of what later became terminal_sync

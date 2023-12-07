@@ -37,7 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Added a new feature to save failed (or optionally all) logs locally (as JSON files)
-- Created a script / library to export the JSON files to a GhostWriter CSV
+- Created a script / library to export the JSON files to a Ghostwriter CSV
   - Configured the server to automatically export a CSV file on shutdown (though stopping a Docker container doesn't seem to trigger it)
 
 ### Fixed
@@ -59,7 +59,7 @@ Initial release
 - FastAPI server with command create and update endpoints
 - Custom config class
 - `config.yaml` template
-- GhostWriter client
+- Ghostwriter client
 - Dockerfile and Docker Compose config that build a terminal_sync server image
 - Bash script that installs dependencies and contains pre-exec and post-exec hooks
 - PowerShell module containing pre-exec and post-exec hooks

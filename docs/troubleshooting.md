@@ -19,13 +19,13 @@ Development and testing were performed using the configurations listed below. If
       - Python 3.11.3
 - Debian 11 (Bash hooks)
       - Python 3.9.2
-- GhostWriter running over HTTPS
+- Ghostwriter running over HTTPS
 
 ---
 
 ## Server Problems
 
-### No GhostWriter API key specified
+### No Ghostwriter API key specified
 
 **Problem**: Neither a GraphQL nor a REST API key were provided
 
@@ -48,24 +48,24 @@ Development and testing were performed using the configurations listed below. If
 
 ### Cannot connect to host <GHOSTWRITER_SERVER> ssl:False [getaddrinfo failed]
 
-**Problem**: terminal_sync is unable to resolve the hostname of your GhostWriter server
+**Problem**: terminal_sync is unable to resolve the hostname of your Ghostwriter server
 
 **Solution**:
 
 1. Verify the `gw_url` setting contains the correct hostname
-2. Verify connectivity to your GhostWriter server (e.g., check any VPNs, SSH tunnels, etc.)
+2. Verify connectivity to your Ghostwriter server (e.g., check any VPNs, SSH tunnels, etc.)
 3. Check your DNS settings
 
 ---
 
 ### Cannot connect to host <GHOSTWRITER_SERVER> ssl:False [The remote computer refused the network connection]
 
-**Problem**: terminal_sync can reach the GhostWriter server, but the port is blocked
+**Problem**: terminal_sync can reach the Ghostwriter server, but the port is blocked
 
 **Solution**:
 
 1. Verify the `gw_url` setting contains any applicable port numbers
-2. Check the firewall settings on your GhostWriter server
+2. Check the firewall settings on your Ghostwriter server
 
 ---
 

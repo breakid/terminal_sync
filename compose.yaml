@@ -1,0 +1,30 @@
+---
+version: "3"
+
+services:
+  terminal_sync:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    image: "terminal_sync"
+    container_name: terminal_sync
+    environment:
+      # Docker will automatically read and load environment variables from the .env file; however, passing the
+      # variables this way allows them to be set interactively on the host as well
+      - GW_URL
+      - GW_SSL_CHECK
+      - GW_TIMEOUT_SECONDS
+      - GW_API_KEY_REST
+      - GW_OPLOG_ID
+      - GW_SRC_HOST
+      - GW_DEST_HOST
+      - OPERATOR
+      - TERMSYNC_DESC_TOKEN
+      - TERMSYNC_JSON_LOG_DIR
+      - TERMSYNC_LOG_LEVEL
+      - TERMSYNC_NOLOG_TOKEN
+      - TERMSYNC_SAVE_ALL_LOCAL
+    volumes:
+      - ./logs:/app/${TERMSYNC_JSON_LOG_DIR:-logs}
+      - ./terminal_sync.log:/app/terminal_sync.log
+    entrypoint: "python3 -m terminal_sync"

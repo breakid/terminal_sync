@@ -3,36 +3,79 @@ import argparse
 import asyncio
 from datetime import datetime
 from glob import glob
+from importlib import import_module
 from json import dump
 from json import load
 from logging import getLogger
 from os import makedirs
 from os import remove
+from pathlib import Path
 from sys import exit
+from types import ModuleType
 
 # Third-party Libraries
 from gql.transport.exceptions import TransportQueryError
 from graphql.error.graphql_error import GraphQLError
 
 # Internal Libraries
-from terminal_sync.config import Config
-from terminal_sync.ghostwriter import GhostWriterClient
+from terminal_sync import __version__ as termsync_version
+from terminal_sync import NoLogException
+from terminal_sync import cfg as config
+from terminal_sync.ghostwriter import GhostwriterClient
 from terminal_sync.log_entry import Entry
 
 logger = getLogger(__name__)
 
-config: Config = Config()
+
+def load_plugins() -> dict[str, ModuleType]:
+    """Dynamically load plugins
+
+    This allows new command processors to be added without modifying the main code base
+
+    Returns:
+        dict[str, ModuleType]: A dictionary mapping module name to the module object
+    """
+    plugin_dir: str = "plugins"
+    module_dir: Path = Path(__file__).parent / plugin_dir
+    modules: dict[str, ModuleType] = {}
+
+    for module_path in module_dir.glob("*.py"):
+        module_name: str = module_path.stem
+
+        # Skip files like __init__.py
+        if module_name.startswith("__"):
+            continue
+
+        # Import and save a reference to the module
+        modules[module_name] = import_module(f"terminal_sync.{plugin_dir}.{module_name}")
+
+    return modules
+
+
+plugins: dict[str, ModuleType] = load_plugins()
 
 
 def get_entry(args: dict[str, datetime | str]) -> tuple[Entry, bool]:
-    # CLI arguments appear last and will override config settings
-    attrs: dict[str, bool | datetime | int | str] = dict(config, **args)
+    """Initialize an Entry object using default config values, CLI arguments, and data stored on disk
+
+    Later sources override values from previous ones (i.e., CLI overrides default config, stored data overrides CLI arguments)
+
+    Args:
+        args (dict[str, datetime  |  str]): The CLI arguments
+
+    Returns:
+        tuple[Entry, bool]: A tuple containing the initialize entry and a boolean indicating whether a previous entry existed
+    """
+    # CLI arguments appear last so that they override config settings (if they are set)
+    attrs: dict[str, bool | datetime | int | str] = dict(config, **{key: value for key, value in args.items() if value})
 
     # Initalize an Entry object from the CLI arguments and config options
     entry: Entry = Entry.from_dict(attrs)
 
     # Search for stored file by OpLod ID and command UUID
-    files: list[str] = glob(f"{config.termsync_json_log_dir}/{entry.oplog_id}_*_{entry.uuid}.json")
+    files: list[str] = [
+        file for file in Path(config.termsync_json_log_dir).glob(f"{entry.oplog_id}_*_{entry.uuid}.json")
+    ]
 
     if len(files) == 0:
         return entry, True
@@ -45,7 +88,7 @@ def get_entry(args: dict[str, datetime | str]) -> tuple[Entry, bool]:
 def save_log(entry: Entry) -> None:
     """Save the entry to a JSON file
 
-    By default, used to cache entries if they fail to log to GhostWriter but can be enabled for all logs
+    By default, used to cache entries if they fail to log to Ghostwriter but can be enabled for all logs
 
     Args:
         uuid (str): A universally unique identifier for the entry
@@ -62,7 +105,7 @@ def save_log(entry: Entry) -> None:
 
 
 async def log_command(entry: Entry, new_entry: bool = True) -> None:
-    """Create and/or return a GhostWriter log entry object
+    """Create and/or return a Ghostwriter log entry object
 
     Checks whether the command in the specified message should trigger logging
     If so, return an existing entry or create a new entry if a matching one does not exist
@@ -72,25 +115,22 @@ async def log_command(entry: Entry, new_entry: bool = True) -> None:
     """
     logger.debug(f"Entry: {entry}")
 
-    # TODO: Move this to a plugin
-    # Parse the description from the command, if applicable
-    if entry.command and config.termsync_desc_token in entry.command:
-        entry.command, entry.description = entry.command.split(config.termsync_desc_token)
-
     # Flag used to determine whether the entry was logged successfully
     # If not, the 'finally' clause will save the log locally
     saved: bool = False
 
     try:
         # Initialize Ghostwriter client if URL and API key are specified
-        # This allows terminal_sync to be used for local logging without a GhostWriter instance
+        # This allows terminal_sync to be used for local logging without a Ghostwriter instance
         if config.gw_url and (config.gw_api_key_graphql or config.gw_api_key_rest):
-            # Create a GhostWriter client using config settings
-            gw_client: GhostWriterClient = GhostWriterClient(
+            # Create a Ghostwriter client using config settings
+            gw_client: GhostwriterClient = GhostwriterClient(
                 url=config.gw_url,
                 graphql_api_key=config.gw_api_key_graphql,
                 rest_api_key=config.gw_api_key_rest,
+                user_agent=f"terminal_sync/{termsync_version}",
                 timeout_seconds=config.gw_timeout_seconds,
+                verify_ssl=config.gw_ssl_check,
             )
 
             gw_id: int | None = await gw_client.log(entry)
@@ -100,9 +140,9 @@ async def log_command(entry: Entry, new_entry: bool = True) -> None:
                 entry.gw_id = gw_id
 
                 if new_entry:
-                    logger.info(f"[+] Logged to GhostWriter with ID: {entry.gw_id}")
+                    logger.info(f"[+] Logged to Ghostwriter with ID: {entry.gw_id}")
                 else:
-                    logger.info(f"[+] Updated GhostWriter log: {entry.gw_id}")
+                    logger.info(f"[+] Updated Ghostwriter log: {entry.gw_id}")
 
     except TimeoutError:
         logger.exception(f"A timeout occurred while connecting to {config.gw_url}")
@@ -111,7 +151,10 @@ async def log_command(entry: Entry, new_entry: bool = True) -> None:
     except GraphQLError as e:
         logger.exception(f"Error with GraphQL query: {e}")
     except Exception as e:
-        logger.exception(e)
+        if "Not found." in e.args:
+            logger.error(f"[!] ERROR: Ghostwriter entry ID {entry.gw_id} not found")
+        else:
+            logger.exception(e)
     finally:
         if config.termsync_save_all_local or not saved:
             logger.info(f"[+] Logged to JSON file with UUID: {entry.uuid}")
@@ -125,15 +168,23 @@ async def log_command(entry: Entry, new_entry: bool = True) -> None:
 
 
 def parse_arguments() -> argparse.Namespace:
+    """Parse CLI arguments
+
+    Returns:
+        argparse.Namespace: Parsed CLI arguments
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument("-c", "--comment", dest="comments", type=str, help="Additional information about the command")
-    parser.add_argument("-i", "--id", dest="gw_id", type=str, help="The GhostWriter ID of a log entry to update")
+    parser.add_argument("-d", "--description", dest="description", type=str, help="Description of the command")
+    # TODO: Make this mutually exclusive with UUID? (this should only be used for manual updates and UUID should only be used for automatic logging)
+    parser.add_argument("-i", "--id", dest="gw_id", type=str, help="The Ghostwriter ID of a log entry to update")
     # Note: Do not set a default for start_time or end_time because we don't want to accidentally overwrite the original start_time in Ghostwriter
     parser.add_argument(
         "-s",
         "--start-time",
         dest="start_time",
-        type=lambda s: datetime.strptime(s, "%F %T"),
+        # type=lambda s: datetime.strptime(s, "%F %T"),
+        type=datetime.fromisoformat,
         help="Timestamp when the command was executed",
     )
     parser.add_argument(
@@ -150,39 +201,81 @@ def parse_arguments() -> argparse.Namespace:
         type=str,
         help="The host where the command execution originates (from the defender's perspective; for example: an internal host running a SOCKS proxy)",
     )
-    parser.add_argument("-d", "--dest-host", dest="destination_host", type=str, help="The host the command targets")
+    parser.add_argument("--dest-host", dest="destination_host", type=str, help="The host the command targets")
+    parser.add_argument("--operator", dest="operator", type=str, help="The operator who ran the command")
     parser.add_argument("-o", "--output", dest="output", type=str, help="The output of the command")
     parser.add_argument("-u", "--uuid", dest="uuid", type=str, help="A universally unique identifier for the command")
     parser.add_argument("command", nargs="?", type=str, help="The command to log (must be quoted)")
     return parser.parse_args()
 
 
-def main():
-    args: argparse.Namespace = parse_arguments()
+def process_entry(entry: Entry) -> Entry | None:
+    """Pass the entry to the 'process()' function of each loaded plugin
 
-    # Exit if no command is specified and no Ghostwriter log ID is specified
-    if not args.command and not args.gw_id:
-        # No command was run, so we don't need to print the "Executed" or "Completed" message
-        exit(1)
+    Args:
+        entry (Entry): A raw (initialized but unprocessed) Entry object
 
-    # Initalize an Entry object from data saved on disk, config options, and CLI arguments
+    Returns:
+        Entry | None: A processed Entry object or 'None' if the entry should not be logged
+    """
+    new_entry: Entry | None = None
+
+    try:
+        # Pass the entry to the 'process()' function of each loaded plugin
+        for plugin_name, plugin in plugins.items():
+            # If new_entry is initialized, reset entry to match it; this allows plugins to stack (i.e., multiple plugins
+            # can process the same command)
+            entry = new_entry if new_entry is not None else entry
+
+            # If the entry matches plugin processing criteria, the process() function will return a modified entry
+            # If not, it will return None; we 'or' it with the existing new_entry to ensure a later non-matching plugin
+            # doesn't erase changes from a previous one
+            new_entry = plugin.process(entry) or new_entry
+    except NoLogException as e:
+        new_entry = None
+        logger.debug(f"{e.message} raised a NoLogException")
+
+    return new_entry
+
+
+def run(args: dict[str, datetime | str]):
+    command: str = args.get("command")
+    gw_id: str = args.get("gw_id")
+
+    # Return if neither command nor Ghostwriter log ID are specified
+    if not command and not gw_id:
+        return
+
+    # Return if the user explicitly stated not to log the command
+    if config.termsync_nolog_token in command:
+        return
+
     entry: Entry
     new_entry: bool
-    entry, new_entry = get_entry(vars(args))
 
-    # gw_id is only specified when a user updates a Ghostwriter log manually from command-line
-    # If it isn't specified, a command was just run; display an "Executed" or "Completed" message
-    if entry.gw_id:
+    if gw_id:
+        # gw_id is only specified when a user updates a Ghostwriter log manually from command-line
+        # Construct the entry using only CLI args to avoid overwriting log entries with default terminal_sync values
+        entry = Entry(args)
         new_entry = False
     elif config.termsync_enabled:
+        # If gw_id isn't specified, assume a command was just run and display an "Executed" or "Completed" message
+        # Check whether terminal_sync is enabled here rather than above to allow use of the manual update functionality even if automatic logging is disabled
+
+        # Initalize an Entry object from data saved on disk, config options, and CLI arguments
+        entry, new_entry = get_entry(args)
+
         if new_entry:
             logger.info(f'[*] Executed: "{entry.command}" at {entry.start_time}')
         else:
             logger.info(f'[+] Completed: "{entry.command}" at {entry.end_time}')
 
-    # Log the command if any trigger words appear or a Ghostwriter log entry ID was specified
-    if args.gw_id or any(keyword in entry.command for keyword in config.termsync_keywords):
+    if entry := process_entry(entry):
         asyncio.run(log_command(entry, new_entry))
+
+
+def main():
+    run(vars(parse_arguments()))
 
 
 if __name__ == "__main__":

@@ -1,15 +1,21 @@
 #!/bin/bash
 
+# Filepath where terminal_sync will write the output of each command executed
+TERMSYNC_CMD_OUTPUT=/tmp/termsync_output.log
+
+# Whether to sync terminal commands to Ghostwriter
 TERMSYNC_ENABLED=true
-TERMSYNC_INSTALL_DIR=$(dirname $BASH_SOURCE)
+
+# Path to terminal_sync application
+TERMSYNC_INSTALL_DIR=$(dirname $(realpath $BASH_SOURCE))
 
 # Only the 'docker' method is currently supported
 EXEC_METHOD=docker #$1
 
 if [[ "${EXEC_METHOD}" == "docker" ]]; then
-    TERMINAL_SYNC_CMD='docker compose run --rm terminal_sync'
+    TERMINAL_SYNC_CMD="docker compose -f ${TERMSYNC_INSTALL_DIR}/compose.yaml run --rm terminal_sync"
 elif [[ "${EXEC_METHOD}" == "python" ]]; then
-    TERMINAL_SYNC_CMD='python3 -m terminal_sync'
+    TERMINAL_SYNC_CMD="PYTHONPATH=${PYTHONPATH};${TERMSYNC_INSTALL_DIR} python3 -m terminal_sync"
 else
     echo "[-] Invalid execution type; please specify 'docker' or 'python'"
     return 1
@@ -21,6 +27,12 @@ if [[ -z "${GW_SRC_HOST}" ]]; then
     # xargs is used to trim trailing whitespace from the IP address
     GW_SRC_HOST="$(hostname) ($(hostname -I | xargs))"
 fi
+
+# =============================================================================
+# ******                      Convenience Function                       ******
+# =============================================================================
+
+alias now="date +'%F_%H%M%S'"
 
 # =============================================================================
 # ******                     Installation and Setup                      ******
@@ -70,7 +82,7 @@ if [[ ! -f $BASH_PREEXEC_PATH ]]; then
 
     # Default to installing unless the user says no
     if [[ ! $REPLY =~ ^[Nn]$ ]]; then
-        echo "source '${BASH_SOURCE}' '${EXEC_METHOD}'" >> ~/.bashrc
+        echo "source '${TERMSYNC_INSTALL_DIR}/terminal_sync.sh' '${EXEC_METHOD}'" >> ~/.bashrc
         echo -e "\e[1;32m[+] Successfully added terminal_sync.sh to ~/.bashrc\e[0m"
     fi
 fi
@@ -96,24 +108,27 @@ if [[ "${EXEC_METHOD}" == "docker" ]]; then
         elif [ -x "$(command -v dnf)" ]; then
             # TODO: Install podman and podman-compose with Docker compatibility
             echo -e "\e[31m[!] Docker / Podman installation not supported with dnf at this time\e[0m"
+        else
+            echo -e "\e[31m[-] Error: Unrecognized package manager; please install Docker and Compose manually then re-run this script\e[0m"
+        return 1
         fi
     fi
-# elif [[ "${EXEC_METHOD}" == "python" ]]; then
-#     # Install python3 and python3-pip
-#     if [[ ! -x $(command -v $package) ]]; then
-#         echo -e "\e[1;34m[*] ${package} not installed; attempting to install...\e[0m"
+elif [[ "${EXEC_METHOD}" == "python" ]]; then
+    # Install python3 and python3-pip
+    if [[ ! -x $(command -v $package) ]]; then
+        echo -e "\e[1;34m[*] ${package} not installed; attempting to install...\e[0m"
 
-#         if [ -x "$(command -v apk)" ];       then sudo apk add -y --no-cache python3 py3-pip
-#         elif [ -x "$(command -v apt-get)" ]; then sudo apt-get install -y python3 python3-pip
-#         elif [ -x "$(command -v dnf)" ];     then sudo dnf install -y python3 python3-pip
-#         elif [ -x "$(command -v zypper)" ];  then sudo zypper install -y python3 python3-pip
-#         else
-#             echo -e "\e[31m[-] Error: Package manager not found. You must manually install: ${packages_needed}\e[0m" >&2
-#             return 1
-#         fi
-#     fi
+        if [ -x "$(command -v apk)" ];       then sudo apk add -y --no-cache python3 py3-pip
+        elif [ -x "$(command -v apt-get)" ]; then sudo apt-get install -y python3 python3-pip
+        elif [ -x "$(command -v dnf)" ];     then sudo dnf install -y python3 python3-pip
+        elif [ -x "$(command -v zypper)" ];  then sudo zypper install -y python3 python3-pip
+        else
+            echo -e "\e[31m[-] Error: Package manager not found. You must manually install: ${packages_needed}\e[0m" >&2
+            return 1
+        fi
+    fi
 
-#     #pip3 install pdm && pdm install #TODO: Better way to do this?
+    #pip3 install pdm && pdm install #TODO: Better way to do this?
 fi
 
 
@@ -132,7 +147,7 @@ function Disable-TermSync {
 }
 
 # =============================================================================
-# ******                      Terminal Sync Client                       ******
+# ******                          Terminal Sync                          ******
 # =============================================================================
 
 # Load bash-preexec to enable `preexec` and `precmd` hooks
@@ -145,10 +160,19 @@ export HISTTIMEFORMAT="%F %T "
 # Set the comment to: "<shell_binary> session: <session_id>"
 COMMENT="$(ps -p $$ -o comm | tail -n 1) session: $(cat /proc/sys/kernel/random/uuid)"
 
-# Defines a pre-execution hook to log the command to GhostWriter
+# Defines a pre-execution hook to log the command to Ghostwriter
 function preexec() {
     # Get everything from the command-line and store it in the `command` variable
     command="$*"
+
+    if [[ "${command}" == "Disable-TermSync" ]]; then
+        # If the command is "Disable-TermSync", disable it immediately, so we don't have to wait for terminal_sync to
+        # process the command first
+        TERMSYNC_ENABLED=false
+        echo "[+] terminal_sync logging disabled"
+    elif [[ "${command}" == "exit" || "${command}" == "logout" ]]; then
+        exit
+    fi
 
     # If terminal_sync is enabled and the command isn't empty (i.e., length of `command` > 0), try to log the command
     if [[ $TERMSYNC_ENABLED && ${#command} -gt 0 ]]; then
@@ -158,10 +182,14 @@ function preexec() {
 
         # Invoke terminal_sync
         $TERMINAL_SYNC_CMD --uuid "${CMD_UUID}" --src-host "${GW_SRC_HOST}" --comment "${COMMENT}" "${command}"
+
+        # Redirect output to 'tee' command
+        # NOTE: Unfortunately, this removes the hooks after the first command
+        # exec 2>&1 > >(tee "${TERMSYNC_CMD_OUTPUT}")
     fi
 }
 
-# Defines a post-execution hook that updates the command entry in GhostWriter
+# Defines a post-execution hook that updates the command entry in Ghostwriter
 function precmd() {
     # IMPORTANT: This must be the first command or else we'll get the status of a command we run
     error_code="$?"
@@ -175,13 +203,20 @@ function precmd() {
         # Determine whether the command succeeded; if the command failed return the error code as well
         [[ $error_code -eq 0 ]] && output='Success' || output="Failed; Return Code: ${error_code}"
 
+        # Append the output of the command, if it exists
+        if [[ -s ${TERMSYNC_CMD_OUTPUT} ]]; then
+            output="${output}\n\n$(cat ${TERMSYNC_CMD_OUTPUT})"
+        fi
+
         # Invoke terminal_sync
-        $TERMINAL_SYNC_CMD --uuid "${CMD_UUID}" --src-host "${GW_SRC_HOST}" --output "${output}" --comment "${COMMENT}" "${command}"
+        $TERMINAL_SYNC_CMD --uuid "${CMD_UUID}" --src-host "${GW_SRC_HOST}" --output "$(echo -e ${output})" --comment "${COMMENT}" "${command}"
 
         # Unset variables to prevent logging unless another command is run (i.e., ignore blank lines)
         unset CMD_UUID
     fi
-}
 
+    # Clean up the output file; ignore any errors (e.g., trying to delete a file that doesn't exist)
+    rm ${TERMSYNC_CMD_OUTPUT} &> /dev/null
+}
 
 echo -e "\e[1;32m[+] Successfully loaded terminal_sync hooks\e[0m"

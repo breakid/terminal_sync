@@ -1,4 +1,4 @@
-"""Converts a terminal_sync JSON log archive to a GhostWriter-compatible CSV file.
+"""Converts a terminal_sync JSON log archive to a Ghostwriter-compatible CSV file.
 
 It can be run as a standalone utility or called as a library, and was specifically designed with no external
 dependencies so it can be run on any system, without terminal_sync needing to be installed.
@@ -13,7 +13,7 @@ from pathlib import Path
 
 
 def export_csv(log_dir: Path, export_dir: Path = Path(".")) -> Path:
-    """Generate a GhostWriter-compatible CSV file from all the JSON files in the specified log directory
+    """Generate a Ghostwriter-compatible CSV file from all the JSON files in the specified log directory
 
     Args:
         log_dir (Path): The directory containing JSON logs

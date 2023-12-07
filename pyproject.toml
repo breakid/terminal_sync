@@ -1,59 +1,90 @@
 [build-system]
-requires = ["pdm-backend"]
-build-backend = "pdm.backend"
+  build-backend = "pdm.backend"
+  requires      = ["pdm-backend"]
 
 [project]
-name = "terminal_sync"
-version = "0.4.0"
-description = "A standalone tool for logging shell commands to GhostWriter automatically"
-authors = [{ name = "breakid" }]
-license = { text = "GPL-3.0-or-later" }
-readme = "README.md"
-# The type hinting used in this project follows PEP 604, which was implemented in 3.10
-requires-python = ">=3.10"
-dependencies = ["aiohttp>=3.8.4", "gql>=3.4.0", "python-dotenv>=1.0.0"]
-keywords = ["Ghostwriter", "Logging"]
+  authors     = [{ name = "breakid" }]
+  description = "A standalone tool for logging shell commands to Ghostwriter automatically"
+  license     = { text = "GPL-3.0-or-later" }
+  name        = "terminal_sync"
+  readme      = "README.md"
+  version     = "0.4.0"
+  # The type hinting used in this project follows PEP 604, which was implemented in 3.10
+  dependencies    = ["gql[aiohttp]>=3.4.1", "httpx>=0.25.0", "python-dotenv>=1.0.0"]
+  keywords        = ["Ghostwriter", "Logging"]
+  requires-python = ">=3.10"
 
 [project.urls]
-homepage = "https://github.com/breakid/terminal_sync"
-documentation = "https://breakid.github.io/terminal_sync"
-repository = "https://github.com/breakid/terminal_sync"
+  documentation = "https://breakid.github.io/terminal_sync"
+  homepage      = "https://github.com/breakid/terminal_sync"
+  repository    = "https://github.com/breakid/terminal_sync"
 
 [tool.black]
-line-length = 120
+  line-length = 120
+
+[tool.coverage.report]
+  show_missing = true
+  #skip_covered = true
+  skip_empty = true
+
+[tool.coverage.html]
+  directory = "./tests/coverage"
+
+[tool.coverage.run]
+  branch = true
+  source = ["terminal_sync"]
 
 [tool.flake8]
-# Compatibility settings for Black (see https://black.readthedocs.io/en/latest/guides/using_black_with_other_tools.html#flake8)
-extend-ignore = ["E203"]
-max-line-length = 120
+  # Compatibility settings for Black (see https://black.readthedocs.io/en/latest/guides/using_black_with_other_tools.html#flake8)
+  extend-ignore   = ["E203"]
+  max-line-length = 120
 
 [tool.interrogate]
-exclude = ["docs", "build"]
-fail-under = 90
-ignore-init-method = true
-ignore-init-module = true
-verbose = 2
+  exclude            = ["build", "docs"]
+  fail-under         = 90
+  ignore-init-method = true
+  ignore-init-module = true
+  verbose            = 2
 
 [tool.isort]
-atomic = true
-force_single_line = true
-import_headings = { stdlib = "Standard Libraries", thirdparty = "Third-party Libraries", firstparty = "Internal Libraries" }
-known_first_party = ["terminal_sync"]
-line_length = 120
-profile = "black"
+  atomic            = true
+  force_single_line = true
+  import_headings   = { stdlib = "Standard Libraries", thirdparty = "Third-party Libraries", firstparty = "Internal Libraries" }
+  known_first_party = ["terminal_sync"]
+  line_length       = 120
+  profile           = "black"
 
 [tool.mypy]
-disable_error_code = "attr-defined"
+  disable_error_code = "attr-defined"
 
 [tool.pdm]
 
 [tool.pdm.dev-dependencies]
-dev = ["black>=23.3.0", "pytest>=7.3.0", "pre-commit>=3.2.2"]
-docs = ["mkdocs>=1.4.2"]
+  dev  = ["black>=23.3.0", "pre-commit>=3.2.2"]
+  docs = ["mkdocs>=1.4.2"]
+  test = ["pytest-asyncio>=0.21.1", "pytest-cov>=4.1.0", "pytest-env>=1.0.1", "pytest-httpx>=0.26.0", "pytest>=7.3.0"]
 
 [tool.pdm.scripts]
-check = "pre-commit run --all-files"
-code = "code ."
-# Run the documentation server on 8080 so it doesn't interfere with the terminal_sync server
-docs = "mkdocs serve --dev-addr 127.0.0.1:8080"
-test = "pytest"
+  check = "pre-commit run --all-files"
+  code  = "code ."
+  # Run the documentation server on 8080 so it doesn't interfere with the terminal_sync server
+  docs = "mkdocs serve --dev-addr 127.0.0.1:8080"
+  test = "pytest --cov=terminal_sync --cov-report html"
+
+[tool.pytest.ini_options]
+  env = [
+    "GW_API_KEY_GRAPHQL=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyIiwic3ViX25h8WUiOiJkYnJldWtpcm9uIiwic3ViX2vtYWlsIjoiIiwiYXVkIjoiR2hvc3R3cml0ZXIiLCJpYXQiOjE2OT62NTA3OTYuMzI0OTE2LCJleHAiOjE3MjYzNTk1ODN9._YJMUBb4noMLazmalZjE-mBZgqpIKsWv1jJi8VQ4K-c",
+    "GW_API_KEY_REST=qoWrhDIz.Mn5fkoxrqsFZZ2pSR13AgW88m9WFNmsk",
+    "GW_DEST_HOST=192.168.1.100 (LAB-DC01)",
+    "GW_OPLOG_ID=1",
+    "GW_SRC_HOST=192.168.1.2 (Ops VM)",
+    "GW_SSL_CHECK=false",
+    "GW_TIMEOUT_SECONDS=10",
+    "GW_URL=https://ghostwriter.local",
+    "OPERATOR=neo",
+    "TERMSYNC_ENABLED=false",
+    "TERMSYNC_JSON_LOG_DIR=json_logs",
+    "TERMSYNC_LOG_LEVEL=DEBUG",
+    "TERMSYNC_NOLOG_TOKEN=#dontlog",
+    "TERMSYNC_SAVE_ALL_LOCAL=true",
+  ]

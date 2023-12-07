@@ -1,4 +1,4 @@
-"""Defines a GhostWriter log entry class"""
+"""Defines a Ghostwriter log entry class"""
 
 # Standard Libraries
 from dataclasses import asdict
@@ -11,14 +11,14 @@ from uuid import uuid4 as uuid
 
 @dataclass
 class Entry:
-    """Defines a GhostWriter log entry
+    """Defines a Ghostwriter log entry
 
     Attributes:
-        oplog_id (int): The ID of the GhostWriter Oplog where entries will be written
+        oplog_id (int): The ID of the Ghostwriter Oplog where entries will be written
         command (str | None): The text of the command executed
         start_time (datetime): Timestamp when the command/activity began
         end_time (datetime): Timestamp when the command/activity completed
-        gw_id (int | None): The log entry ID returned by GhostWriter
+        gw_id (int | None): The log entry ID returned by Ghostwriter
             Used to update the entry on completion
         source_host (str | None): The host where the activity originated
         operator (str | None): The name/identifier of the person creating the entry
@@ -26,7 +26,7 @@ class Entry:
         tool (str | None): The name/identifier of the tool used
         user_context (str | None): Identifier for the credentials used for the command/activity
         output (str | None): The output or results of the command/activity
-            Given the limited space in the GhostWriter UI, this is usually a success or failure note
+            Given the limited space in the Ghostwriter UI, this is usually a success or failure note
         description (str | None): The goal/intent/reason for running the command or performing the action
         comments (str | None): Misc additional information about the command / activity
     """
@@ -114,6 +114,7 @@ class Entry:
         Args:
             start_time (datetime | str): The new start_time
         """
+        # Ensure start_time is a datetime object
         if start_time and isinstance(start_time, datetime):
             self._start_time = start_time
         elif start_time and isinstance(start_time, str):
@@ -137,15 +138,13 @@ class Entry:
         Args:
             end_time (datetime | str): The new end_time
         """
+        # Ensure end_time is a datetime object
         if end_time and isinstance(end_time, datetime):
-            self._end_time = end_time
+            pass
         elif end_time and isinstance(end_time, str):
-            self._end_time = datetime.strptime(end_time, "%Y-%m-%d %H:%M:%S")
+            end_time = datetime.strptime(end_time, "%Y-%m-%d %H:%M:%S")
         else:
-            self._end_time = datetime.utcnow()
-
-        # Ensure end_date is a datetime object
-        end_time = end_time if end_time and isinstance(end_time, datetime) else datetime.utcnow()
+            end_time = datetime.utcnow()
 
         # Note: Use _start_time rather than start_time to avoid:
         #   TypeError: '<' not supported between instances of 'datetime.datetime' and 'str'
@@ -177,7 +176,7 @@ class Entry:
         """Return a dictionary of non-empty entry attributes using the Ghostwriter field names
 
         Returns:
-            A dictionary of fields for the GhostWriter REST API
+            A dictionary of fields for the Ghostwriter REST API
         """
         # Map attribute names to REST API key names
         field_map: dict[str, str] = {
