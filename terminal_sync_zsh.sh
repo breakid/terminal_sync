@@ -2,7 +2,7 @@
 # ******                     Configuration Settings                      ******
 # =============================================================================
 
-# The name / identifier of the user creating the log entries
+# The name / identifier of the user creating the log entries. Defaults to the config.yaml operator if no operator is specified. 
 export OPERATOR=""
 
 # The IP and port where the terminal_sync server is running
@@ -28,69 +28,26 @@ TERMSYNC_TIMEOUT=4
 # ******                     Installation and Setup                      ******
 # =============================================================================
 
-# NOTE: These installation steps are run automatically every time the script is invoked to make sure the necessary
-# dependencies are in place and haven't been removed since the last execution
-
-BASH_PREEXEC_PATH=~/bash-preexec.sh
-
-# If bash-preexec.sh does not exist, warn the user about running scripts from the Internet,
-# if they accept the risk, download it
-if [[ ! -f $BASH_PREEXEC_PATH ]]; then
-    echo -e "\e[31m[!] Security Warning\e[0m: This script will download and run bash-preexec.sh (https://raw.githubusercontent.com/rcaloras/bash-preexec/master/bash-preexec.sh). Downloading and running scripts from the Internet can be dangerous; you are advised to review the contents of this script before continuing."
-
-    read -p "[?] I accept the risk [y|N]: " -N 1
-    echo '' # Start a new line after the previous 'read' command
-
-    # Bail unless the user specifically agrees
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        echo -e "\e[31m[X] Operation cancelled\e[0m"
-        # IMPORTANT: Use 'return' rather than 'exit' because this script will be invoked via 'source' and
-        # 'exit' would kill the shell
-        return 1
-    fi
-
-    echo -e "\e[1;34m[*] Downloading bash-preexec.sh...\e[0m"
-
-    # Download bash-preexec.sh
-    # This is used to hook commands before they execute
-    curl https://raw.githubusercontent.com/rcaloras/bash-preexec/master/bash-preexec.sh > $BASH_PREEXEC_PATH
-
-    if [[ ! -f $BASH_PREEXEC_PATH ]]; then
-        echo -e "\e[31m[-] Error: Failed to download bash-preexec.sh\e[0m"
-        return 1
-    fi
-
-    # Ensure bash-preexec.sh is executable
-    chmod +x $BASH_PREEXEC_PATH
-
-    echo -e "\e[1;32m[+] Successfully downloaded bash-preexec.sh\e[0m"
-
-    # If bash-preexec doesn't exist, assume this is the first run, prompt the user whether they want to install terminal_sync
-    echo "[*] This looks like your first time running terminal_sync on this host."
-    read -p "[?] Would you like to permanently install the bash hooks? [Y|n]: " -N 1
-    echo '' # Start a new line after the previous 'read' command
-
-    # Default to installing unless the user says no
-    if [[ ! $REPLY =~ ^[Nn]$ ]]; then
-        echo "source '$(realpath $PWD/$BASH_SOURCE)'" >> ~/.bashrc
-        echo -e "\e[1;32m[+] Successfully added terminal_sync.sh to ~/.bashrc\e[0m"
-    fi
+# If the script doesn't exist in ~/.zshrc, it adds itself to the file.
+if ! grep -q "${0:a}" ~/.zshrc; then
+    echo "source ${0:a}" >> ~/.zshrc
+    echo "\e[1;32m[+] Successfully added terminal_sync.sh to ~/.zshrc\e[0m"
 fi
 
 # Install required packages (only if one doesn't exist, so we don't do this every time terminal_sync runs)
 # Source: https://unix.stackexchange.com/questions/46081/identifying-the-system-package-manager
-packages_needed='curl jq'
+packages_needed=(curl jq)
 
 for package in $packages_needed; do
     if [[ ! -x $(command -v $package) ]]; then
-        echo -e "\e[1;34m[*] ${package} not installed; attempting to install...\e[0m"
+        echo "\e[1;34m[*] ${package} not installed; attempting to install...\e[0m"
 
         if [ -x "$(command -v apk)" ];       then sudo apk add -y --no-cache $packages_needed
         elif [ -x "$(command -v apt-get)" ]; then sudo apt-get install -y $packages_needed
         elif [ -x "$(command -v dnf)" ];     then sudo dnf install -y $packages_needed
         elif [ -x "$(command -v zypper)" ];  then sudo zypper install -y $packages_needed
         else
-            echo -e "\e[31m[-] Error: Package manager not found. You must manually install: ${packages_needed}\e[0m" >&2
+            echo "\e[31m[-] Error: Package manager not found. You must manually install: ${packages_needed}\e[0m" >&2
             return 1
         fi
     fi
@@ -111,17 +68,17 @@ for ((i=0; i < $num_display_levels; i++)); do
     declare ${name}=$i
 done
 
-function Enable-TermSync {
+Enable-TermSync() {
     TERMSYNC_LOGGING=1
     echo "[+] terminal_sync logging enabled"
 }
 
-function Disable-TermSync {
+Disable-TermSync() {
     TERMSYNC_LOGGING=0
     echo "[+] terminal_sync logging disabled"
 }
 
-function Set-TermSyncVersbosity() {
+Set-TermSyncVersbosity() {
     echo "Display Levels:"
     echo "---------------"
 
@@ -134,7 +91,8 @@ function Set-TermSyncVersbosity() {
     echo "[*] Current log level: ${DISPLAY_LEVELS[TERMSYNC_VERBOSITY]}"
 
     while [ 1 ]; do
-        read -p "[?] Enter the number of your desired display level: " -N 1
+        echo "[?] Enter the number of your desired display level: "
+        read -k
 
         # Verify the input is within the valid range
         if [[ $REPLY -ge 0 && $REPLY -lt $num_display_levels ]]; then
@@ -154,18 +112,15 @@ function Set-TermSyncVersbosity() {
 # ******                      Terminal Sync Client                       ******
 # =============================================================================
 
-# Load bash-preexec to enable `preexec` and `precmd` hooks
-source $BASH_PREEXEC_PATH
-
 # Set the history time format to timestamp each command run (format: 'YYYY-mm-dd HH:MM:SS')
 # This is useful as a fallback and is expected by the `sed` command that parses the command line from the history
+# TODO: review this:
 export HISTTIMEFORMAT="%F %T "
 
 # Set the comment to: "<shell_binary> session: <session_id>"
 COMMENT="$(ps -p $$ -o comm | tail -n 1) session: $(cat /proc/sys/kernel/random/uuid)"
 
-
-function display_response() {
+display_response() {
     response=$*
 
     # If an error occured the server will return a JSON object with a "detail" attribute
@@ -174,7 +129,7 @@ function display_response() {
     if [[ $response == *"{\"detail\":"* ]]; then
         if [[ $TERMSYNC_VERBOSITY -gt $DISPLAY_SUCCESS_ONLY ]]; then
             error_msg="$(echo $response | jq -r '.detail')"
-            echo -e "\e[31m[terminal_sync] [ERROR]: ${error_msg}\e[0m"
+            echo "\e[31m[terminal_sync] [ERROR]: ${error_msg}\e[0m"
         fi
     elif [[ $TERMSYNC_VERBOSITY -gt $DISPLAY_EXEC_ONLY && ${#response} -gt 0 ]]; then
         # Print the response, stripping leading and trailing quotes
@@ -182,7 +137,7 @@ function display_response() {
     fi
 }
 
-function create_log() {
+create_log() {
     command=$1
 
     if [[ $TERMSYNC_VERBOSITY -gt $DISPLAY_NONE ]]; then
@@ -215,14 +170,14 @@ function create_log() {
     fi
 }
 
-function update_log() {
+update_log() {
     command=$1
     error_code=$2
 
     end_time=$(date -u +'%F %H:%M:%S')
 
     if [[ $TERMSYNC_VERBOSITY -gt $DISPLAY_NONE ]]; then
-        echo -e "\n[+] Completed: \"${command}\" at ${end_time}"
+        echo "\n[+] Completed: \"${command}\" at ${end_time}"
     fi
 
     # Determine whether the command succeeded; if the command failed return the error code as well
@@ -257,8 +212,8 @@ function update_log() {
 }
 
 # Defines a pre-execution hook to log the command to GhostWriter
-function preexec() {
-    command="$*"
+preexec() {
+    command=$1
 
     if [[ $TERMSYNC_VERBOSITY -gt $DISPLAY_ALL ]]; then
         echo "Command: $command"
@@ -276,7 +231,7 @@ function preexec() {
 }
 
 # Defines a post-execution hook that updates the command entry in GhostWriter
-function precmd() {
+precmd() {
     # IMPORTANT: This must be the first command or else we'll get the status of a command we run
     error_code="$?"
 
@@ -290,11 +245,12 @@ function precmd() {
     # The CMD_UUID check prevents duplicate submissions when the user submits a blank line
     if [[ $TERMSYNC_LOGGING -gt 0 && ${#CMD_UUID} -gt 0 ]]; then
         # Get the last command and strip the index and timestamp from the front
-        last_command=$(export LC_ALL=C; builtin history 1 | sed '1 s/^[^:]*[^ ]* *//');
+
+#        last_command=$(export LC_ALL=C; builtin history 1 | sed '1 s/^[^:]*[^ ]* *//');
         # last_command="$(export LC_ALL=C; builtin history 1)"
         # start_time="$(echo $last_command | awk '{print $2,$3}')"
 
-        update_log "${last_command}" "${error_code}"
+        update_log "${command}" "${error_code}"
 
         # Unset variables to prevent logging unless another command is run (i.e., ignore blank lines)
         unset CMD_UUID
@@ -302,5 +258,4 @@ function precmd() {
     fi
 }
 
-
-echo -e "\e[1;32m[+] Successfully loaded terminal_sync hooks\e[0m"
+echo "\e[1;32m[+] Successfully loaded terminal_sync hooks\e[0m"

@@ -167,6 +167,10 @@ async def log_command(msg: Message) -> tuple[Entry, str]:
             # Tell static analyzers that `entry` is no longer None
             assert isinstance(entry, Entry)
 
+            # If the entry does not specify an operator, ensure the config operator is provided instead
+            if entry.operator == "":
+                entry.operator = config.operator
+
             # If gw_client isn't initialized, return early and let the 'finally' clause save the log locally
             if gw_client is None:
                 return (entry, f"[+] Logged to JSON file with UUID: {msg.uuid}")
