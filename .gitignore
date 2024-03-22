@@ -170,6 +170,7 @@ cython_debug/
 
 
 # Custom
+cache/
 logs/
 config.yaml
 

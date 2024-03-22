@@ -71,10 +71,10 @@ class Config:
         gw_timeout_seconds (int): The number of seconds the server will wait for a response from Ghostwriter; defaults to 5
         gw_url (str): The URL for your Ghostwriter instance
         operator (str): The name / identifier of the user creating the log entries
+        termsync_cache_dir (Path): The directory where JSON log files are written; defaults to `cache`
         termsync_desc_token (str): The string used to delimit the command and an optional description; defaults to `#desc`
         termsync_enabled (bool): Whether terminal_sync logging is enabled; defaults to True
-        termsync_json_log_dir (str): The directory where JSON log files are written; defaults to `logs`
-        termsync_log_level (str): The logging level (valid options are: ERROR, WARN, INFO, DEBUG); defaults to INFO
+        termsync_log_dir (Path): The directory where terminal_sync application logs are written; must match file handler path in logging_config.yaml and the mounted log directory in compose.yaml (if applicable); defaults to `logs`
         termsync_nolog_token (str): The string used to indicate that an command should not be logged; defaults to `#nolog`
         termsync_save_all_local (bool): Whether to save all logs using the JSON file (may have a performance impact);
             defaults to False
@@ -89,28 +89,19 @@ class Config:
     gw_timeout_seconds: int = 5
     gw_url: str = ""
     operator: str = ""
+    termsync_cache_dir: Path = Path("cache")
     termsync_desc_token: str = "#desc"
     termsync_enabled: bool = True
-    termsync_json_log_dir: Path = Path("logs")
-    termsync_log_level: str = "INFO"
+    termsync_log_dir: Path = Path("logs")
     termsync_nolog_token: str = "#nolog"
     termsync_save_all_local: bool = False
 
     def __init__(self):
-        # Load environment variables from .env file
-        try:
-            # Note: Imported here rather than at the top to allow the dependency to be optional
-            from dotenv import load_dotenv  # isort:skip
-
-            load_dotenv()
-        except ImportError:
-            logger.warning('dotenv is not installed; skipping loading ".env"')
-
         setting_name: str
         new_value: Any
         setting_type: Type
 
-        # Maintain a list of attributes, in order to iterate through them
+        # Maintain a list of attributes, in order to iterate through them (in a consistent order)
         self.attrs: List[str] = []
 
         # Override defaults with environment variables
@@ -130,8 +121,11 @@ class Config:
 
                     logger.debug(f"Setting {setting_name} to: {new_value}")
                 except ValueError:
-                    logger.error(f"{setting_name.upper()} is not a valid {setting_type.__name__}")
+                    logger.error(f"[-] {setting_name.upper()} is not a valid {setting_type.__name__}")
                     exit(1)
+
+        if not self.termsync_desc_token:
+            self.termsync_desc_token = "#desc"
 
         # Create alias attributes for initializing Entry objects
         self.source_host: str = self.gw_src_host
@@ -142,7 +136,6 @@ class Config:
 
         self._validate()
 
-
     def __iter__(self):
         """Iterate through the object's attributes
 
@@ -151,7 +144,6 @@ class Config:
         """
         for attr in self.attrs:
             yield (attr, getattr(self, attr))
-
 
     def _validate(self):
         # The description delimiter token must start with a "#" or else it will be interpreted (and executed) as part of the command

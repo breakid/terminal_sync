@@ -20,11 +20,12 @@ services:
       - GW_DEST_HOST
       - OPERATOR
       - TERMSYNC_DESC_TOKEN
-      - TERMSYNC_JSON_LOG_DIR
-      - TERMSYNC_LOG_LEVEL
+      - TERMSYNC_CACHE_DIR
+      - TERMSYNC_LOG_DIR
       - TERMSYNC_NOLOG_TOKEN
       - TERMSYNC_SAVE_ALL_LOCAL
     volumes:
-      - ./logs:/app/${TERMSYNC_JSON_LOG_DIR:-logs}
-      - ./terminal_sync.log:/app/terminal_sync.log
+      - ./cache:/app/${TERMSYNC_CACHE_DIR:-cache}
+      - ./logs:/app/${TERMSYNC_LOG_DIR:-logs}
+      - ./logging_config.yaml:/app/logging_config.yaml
     entrypoint: "python3 -m terminal_sync"

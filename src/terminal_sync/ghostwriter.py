@@ -1,8 +1,8 @@
 """Defines a Ghostwriter client class"""
 
 # Standard Libraries
-import logging
 from collections.abc import Callable
+from logging import getLogger
 
 # Third-party Libraries
 from httpx import AsyncClient
@@ -14,10 +14,7 @@ from gql.transport.aiohttp import AIOHTTPTransport
 # Internal Libraries
 from terminal_sync.log_entry import Entry
 
-logger = logging.getLogger(__name__)
-
-# Suppress overly verbose logging
-logging.getLogger("gql.transport.aiohttp").setLevel(logging.WARNING)
+logger = getLogger(__name__)
 
 
 class GhostwriterClient:

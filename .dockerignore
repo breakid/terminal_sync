@@ -10,21 +10,24 @@
 
 # Exclude Docker and Docker Compose files
 **/Dockerfile
-docker-compose.yaml
+compose.yaml
 
 # Exclude project documentation
 docs
-# CONTRIBUTORS.txt
+CHANGELOG.md
+CODE_OF_CONDUCT.md
+CONTRIBUTING.txt
 LICENSE
 mkdocs.yml
+README.md
 
 # Exclude local cached files
 **/__pycache__
 build
 
 # Exclude other files not needed in a container
-**/config_template.yaml
-**/log_archive
-config.yaml
-terminal_sync.*
+cache
+logs
 tests
+bash-preexec.sh
+terminal_sync.*

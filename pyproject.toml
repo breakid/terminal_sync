@@ -10,7 +10,7 @@
   readme      = "README.md"
   version     = "0.4.0"
   # The type hinting used in this project follows PEP 604, which was implemented in 3.10
-  dependencies    = ["gql[aiohttp]>=3.4.1", "httpx>=0.25.0", "python-dotenv>=1.0.0"]
+  dependencies    = ["gql[aiohttp]>=3.4.1", "httpx>=0.25.0", "pyyaml>=6.0.1"]
   keywords        = ["Ghostwriter", "Logging"]
   requires-python = ">=3.10"
 
@@ -32,6 +32,7 @@
 
 [tool.coverage.run]
   branch = true
+  omit   = ["__main__.py"]
   source = ["terminal_sync"]
 
 [tool.flake8]
@@ -82,9 +83,9 @@
     "GW_TIMEOUT_SECONDS=10",
     "GW_URL=https://ghostwriter.local",
     "OPERATOR=neo",
+    "TERMSYNC_CACHE_DIR=json_logs",
     "TERMSYNC_ENABLED=false",
-    "TERMSYNC_JSON_LOG_DIR=json_logs",
-    "TERMSYNC_LOG_LEVEL=DEBUG",
+    "TERMSYNC_LOG_DIR=termsync_logs",
     "TERMSYNC_NOLOG_TOKEN=#dontlog",
     "TERMSYNC_SAVE_ALL_LOCAL=true",
   ]

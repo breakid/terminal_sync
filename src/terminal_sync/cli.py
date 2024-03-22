@@ -35,11 +35,13 @@ def load_plugins() -> dict[str, ModuleType]:
     Returns:
         dict[str, ModuleType]: A dictionary mapping module name to the module object
     """
+    # Note: This function must be defined in a module directly in the package root directory;
+    # otherwise, change this line
+    package: Path = Path(__file__).parent
     plugin_dir: str = "plugins"
-    module_dir: Path = Path(__file__).parent / plugin_dir
     modules: dict[str, ModuleType] = {}
 
-    for module_path in module_dir.glob("*.py"):
+    for module_path in (package / plugin_dir).glob("*.py"):
         module_name: str = module_path.stem
 
         # Skip files like __init__.py
@@ -47,7 +49,7 @@ def load_plugins() -> dict[str, ModuleType]:
             continue
 
         # Import and save a reference to the module
-        modules[module_name] = import_module(f"terminal_sync.{plugin_dir}.{module_name}")
+        modules[module_name] = import_module(f"{package.name}.{plugin_dir}.{module_name}")
 
     return modules
 
@@ -73,9 +75,7 @@ def get_entry(args: dict[str, datetime | str]) -> tuple[Entry, bool]:
     entry: Entry = Entry.from_dict(attrs)
 
     # Search for stored file by OpLod ID and command UUID
-    files: list[str] = [
-        file for file in Path(config.termsync_json_log_dir).glob(f"{entry.oplog_id}_*_{entry.uuid}.json")
-    ]
+    files: list[str] = [file for file in Path(config.termsync_cache_dir).glob(f"{entry.oplog_id}_*_{entry.uuid}.json")]
 
     if len(files) == 0:
         return entry, True
@@ -97,10 +97,10 @@ def save_log(entry: Entry) -> None:
     logger.debug(f'Saving log with UUID "{entry.uuid}": {entry}')
 
     # Make sure the output directory exists
-    makedirs(config.termsync_json_log_dir, exist_ok=True)
+    makedirs(config.termsync_cache_dir, exist_ok=True)
 
     # Write updated dictionary back to disk
-    with open(config.termsync_json_log_dir / entry.json_filename(), "w") as out_file:
+    with open(config.termsync_cache_dir / entry.json_filename(), "w") as out_file:
         dump(dict(entry), out_file)
 
 
@@ -164,7 +164,7 @@ async def log_command(entry: Entry, new_entry: bool = True) -> None:
             save_log(entry)
         else:
             # Remove temp log file
-            remove(config.termsync_json_log_dir / entry.json_filename())
+            remove(config.termsync_cache_dir / entry.json_filename())
 
 
 def parse_arguments() -> argparse.Namespace:
@@ -183,7 +183,6 @@ def parse_arguments() -> argparse.Namespace:
         "-s",
         "--start-time",
         dest="start_time",
-        # type=lambda s: datetime.strptime(s, "%F %T"),
         type=datetime.fromisoformat,
         help="Timestamp when the command was executed",
     )
@@ -191,7 +190,6 @@ def parse_arguments() -> argparse.Namespace:
         "-e",
         "--end-time",
         dest="end_time",
-        # action=lambda s: datetime.strptime(s, "%F %T"),
         type=datetime.fromisoformat,
         help="Timestamp when the command finished executing",
     )
@@ -218,6 +216,7 @@ def process_entry(entry: Entry) -> Entry | None:
     Returns:
         Entry | None: A processed Entry object or 'None' if the entry should not be logged
     """
+    # TODO: This is probably a better way to do this...
     new_entry: Entry | None = None
 
     try:
@@ -238,16 +237,16 @@ def process_entry(entry: Entry) -> Entry | None:
     return new_entry
 
 
-def run(args: dict[str, datetime | str]):
+def run(args: dict[str, datetime | str]) -> None:
     command: str = args.get("command")
     gw_id: str = args.get("gw_id")
 
-    # Return if neither command nor Ghostwriter log ID are specified
-    if not command and not gw_id:
-        return
-
     # Return if the user explicitly stated not to log the command
     if config.termsync_nolog_token in command:
+        return
+
+    # Return if neither command nor Ghostwriter log ID are specified
+    if not command and not gw_id:
         return
 
     entry: Entry
@@ -255,16 +254,17 @@ def run(args: dict[str, datetime | str]):
 
     if gw_id:
         # gw_id is only specified when a user updates a Ghostwriter log manually from command-line
-        # Construct the entry using only CLI args to avoid overwriting log entries with default terminal_sync values
+        # Construct an entry using only CLI args to avoid overwriting log entries with default terminal_sync values
+        # TODO: Verify this doesn't actually overwrite log entry data (i.e., comments, and start and end time have defaults in Entry)
         entry = Entry(args)
         new_entry = False
     elif config.termsync_enabled:
-        # If gw_id isn't specified, assume a command was just run and display an "Executed" or "Completed" message
         # Check whether terminal_sync is enabled here rather than above to allow use of the manual update functionality even if automatic logging is disabled
 
         # Initalize an Entry object from data saved on disk, config options, and CLI arguments
         entry, new_entry = get_entry(args)
 
+        # If gw_id isn't specified, assume a command was just run and display either an "Executed" or "Completed" message
         if new_entry:
             logger.info(f'[*] Executed: "{entry.command}" at {entry.start_time}')
         else:
@@ -274,6 +274,7 @@ def run(args: dict[str, datetime | str]):
         asyncio.run(log_command(entry, new_entry))
 
 
+# Note: Define main() to provide a single function with no arguments that can be called from __main__.py
 def main():
     run(vars(parse_arguments()))
 

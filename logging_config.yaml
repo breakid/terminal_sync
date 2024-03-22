@@ -1,0 +1,37 @@
+---
+version: 1
+formatters:
+  detailed:
+    datefmt: '%Y-%m-%d %H:%M:%S'
+    format: '%(asctime)s [%(levelname)s] [%(name)s] %(filename)s:%(lineno)d - %(funcName)s - %(message)s'
+  simple:
+    datefmt: '%Y-%m-%d %H:%M:%S'
+    format: '[terminal_sync] %(message)s'
+handlers:
+  console:
+    class: logging.StreamHandler
+    formatter: simple
+    level: INFO
+    stream: ext://sys.stdout
+  file:
+    class: logging.handlers.RotatingFileHandler
+    encoding: 'utf-8'
+    formatter: detailed
+    filename: logs/terminal_sync.log
+    level: DEBUG
+    # Limit logs to 5MB
+    maxBytes: 5242880
+    backupCount: 5
+loggers:
+  terminal_sync:
+    handlers: [console, file]
+    level: DEBUG
+    propagate: 'no'
+  # Redirect httpx logs to the log file
+  httpx:
+    handlers: [file]
+    level: INFO
+  # Suppress overly verbose logging
+  gql.transport.aiohttp:
+    handlers: [console, file]
+    level: WARN

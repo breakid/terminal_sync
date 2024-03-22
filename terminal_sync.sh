@@ -1,5 +1,7 @@
 #!/bin/bash
 
+DOCKER_IMAGE=terminal_sync:latest
+
 # Filepath where terminal_sync will write the output of each command executed
 TERMSYNC_CMD_OUTPUT=/tmp/termsync_output.log
 
@@ -45,7 +47,7 @@ BASH_PREEXEC_PATH=${TERMSYNC_INSTALL_DIR}/bash-preexec.sh
 
 # If bash-preexec.sh does not exist, warn the user about running scripts from the Internet,
 # if they accept the risk, download it
-if [[ ! -f $BASH_PREEXEC_PATH ]]; then
+if [[ ! -s $BASH_PREEXEC_PATH ]]; then
     echo -e "\e[31m[!] Security Warning\e[0m: This script will download and run bash-preexec.sh (https://raw.githubusercontent.com/rcaloras/bash-preexec/master/bash-preexec.sh). Downloading and running scripts from the Internet can be dangerous; you are advised to review the contents of this script before continuing."
 
     read -p "[?] I accept the risk [y|N]: " -N 1
@@ -61,9 +63,13 @@ if [[ ! -f $BASH_PREEXEC_PATH ]]; then
 
     echo -e "\e[1;34m[*] Downloading bash-preexec.sh...\e[0m"
 
+    # Ensure curl is installed
+    sudo apt-get update
+    sudo apt-get install -y curl
+
     # Download bash-preexec.sh
     # This is used to hook commands before they execute
-    curl https://raw.githubusercontent.com/rcaloras/bash-preexec/master/bash-preexec.sh > $BASH_PREEXEC_PATH
+    curl -fsSL https://raw.githubusercontent.com/rcaloras/bash-preexec/master/bash-preexec.sh > $BASH_PREEXEC_PATH
 
     if [[ ! -f $BASH_PREEXEC_PATH ]]; then
         echo -e "\e[31m[-] Error: Failed to download bash-preexec.sh\e[0m"
@@ -92,6 +98,8 @@ fi
 
 if [[ "${EXEC_METHOD}" == "docker" ]]; then
     if [ ! -x "$(command -v docker)" ]; then
+        echo "[*] Installing Docker and Docker Compose"
+
         # Install Docker
         if [ -x "$(command -v apt-get)" ]; then
             sudo apt-get remove docker docker-engine docker.io containerd runc
@@ -99,9 +107,12 @@ if [[ "${EXEC_METHOD}" == "docker" ]]; then
             sudo apt-get install -y ca-certificates curl gnupg lsb-release
 
             sudo mkdir -p /etc/apt/keyrings
-            # curl -fsSL https://download.docker.com/linux/$(lsb_release -i | tr '[:upper:]' '[:lower:]')/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
 
-            # echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/$(lsb_release -i | tr '[:upper:]' '[:lower:]') $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+            if [[ ! -f /etc/apt/keyrings/docker.gpg ]]; then
+                curl -fsSL https://download.docker.com/linux/$(lsb_release -is | tr '[:upper:]' '[:lower:]')/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+            fi
+
+            echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/$(lsb_release -is | tr '[:upper:]' '[:lower:]') $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 
             sudo apt-get update
             sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
@@ -110,8 +121,22 @@ if [[ "${EXEC_METHOD}" == "docker" ]]; then
             echo -e "\e[31m[!] Docker / Podman installation not supported with dnf at this time\e[0m"
         else
             echo -e "\e[31m[-] Error: Unrecognized package manager; please install Docker and Compose manually then re-run this script\e[0m"
-        return 1
+            return 1
         fi
+    fi
+
+    # Ensure the current user belongs to the 'docker' group
+    sudo usermod -aG docker $USER
+
+    # Apply the group membership to the current session
+    newgrp docker
+
+    # Check whether the terminal_sync image exists locally; if not, build it
+    docker manifest inspect "${DOCKER_IMAGE}" > /dev/null 2>&1
+    exit_code=$?
+
+    if [[ $exit_code -ne 0 ]]; then
+        docker compose -f ${TERMSYNC_INSTALL_DIR}/compose.yaml build --pull
     fi
 elif [[ "${EXEC_METHOD}" == "python" ]]; then
     # Install python3 and python3-pip
