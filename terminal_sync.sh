@@ -219,6 +219,12 @@ function precmd() {
     # IMPORTANT: This must be the first command or else we'll get the status of a command we run
     error_code="$?"
 
+    if [[ $TERMSYNC_VERBOSITY -gt $DISPLAY_ALL ]]; then
+        echo "Command UUID: $CMD_UUID"
+        echo "Command Start Time: $CMD_START_TIME"
+        echo "Error Code: $error_code"
+    fi
+
     # If logging is enabled and CMD_UUID was set by the pre-exec hook, try to update the entry
     # The CMD_UUID check prevents duplicate submissions when the user submits a blank line
     if [[ $TERMSYNC_ENABLED && ${#CMD_UUID} -gt 0 ]]; then
@@ -238,6 +244,7 @@ function precmd() {
 
         # Unset variables to prevent logging unless another command is run (i.e., ignore blank lines)
         unset CMD_UUID
+        unset CMD_START_TIME
     fi
 
     # Clean up the output file; ignore any errors (e.g., trying to delete a file that doesn't exist)
