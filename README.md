@@ -1,5 +1,7 @@
 # terminal_sync
 
+**No Longer Maintained**: I rewrote terminal_sync as a pure CLI application, without the overhead, complexity, or security risks of FastAPI. This new version also supported plugin-based command parsing; however, testing was incomplete when I lost motivation to work on this project. After intending to finish these changes for almost a year, I've decided to officially shelve this project. For anyone who is interested, I highly recommend checking out and finishing the new version, which is available on the `cli_client` branch. I'll leave the project active, for now, in case anyone wants to submit a pull request for the finalized CLI client.
+
 terminal_sync is a standalone tool for logging Bash and PowerShell commands to [GhostWriter](https://github.com/GhostManager/Ghostwriter) automatically. The provided Bash script and PowerShell module register pre-exec and post-exec hooks that capture executed commands and function as clients, sending command information to the terminal_sync server for additional processing and enrichment. Any commands that meet the logging criteria (e.g., contain a specific keyword) are sent to GhostWriter.
 
 For more information, including [how to get started](https://breakid.github.io/terminal_sync/setup), please refer to our [documentation](https://breakid.github.io/terminal_sync/)
